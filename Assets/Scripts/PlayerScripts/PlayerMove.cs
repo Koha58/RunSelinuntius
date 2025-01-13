@@ -8,9 +8,9 @@ using UnityEngine.InputSystem;
 public class PlayerMove : MonoBehaviour
 {
     [SerializeField] private Animator _animator;        // プレイヤーのアニメーター
-    [SerializeField] private float _forwardSpeed = 3f;  // 前方向移動速度
+    [SerializeField] private float _forwardSpeed = 5f;  // 前方向移動速度
     [SerializeField] private float _moveSpeed = 5f;     // 横移動速度
-    [SerializeField] private float _jumpForce = 5f;     // ジャンプ力
+    [SerializeField] private float _jumpForce = 7f;     // ジャンプ力
     [SerializeField] private LayerMask _groundLayer;    // 地面のレイヤー
 
     private float _horizontalVelocity;                 // 横方向の移動速度
