@@ -10,7 +10,7 @@ public class GenerateLevels : MonoBehaviour
     // レベルオブジェクトを格納する配列
     [SerializeField] private GameObject[] level;
     // 生成されるレベルの新しいz座標
-    [SerializeField] private int zPos = 98;
+    [SerializeField] private int zPos = 392;
     // レベルを生成中かどうかを表すフラグ
     [SerializeField] private bool creatingLevel = false;
     // ランダムなレベルを選択するための数字

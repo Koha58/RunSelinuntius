@@ -7,15 +7,15 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class PlayerMove : MonoBehaviour
 {
-    [SerializeField] private Animator _animator;        // プレイヤーのアニメーター
-    [SerializeField] private float _forwardSpeed = 5f;  // 前方向移動速度
-    [SerializeField] private float _moveSpeed = 5f;     // 横移動速度
-    [SerializeField] private float _jumpForce = 7f;     // ジャンプ力
-    [SerializeField] private LayerMask _groundLayer;    // 地面のレイヤー
+    [SerializeField] private Animator animator;        // プレイヤーのアニメーター
+    [SerializeField] private float forwardSpeed = 5f;  // 前方向移動速度
+    [SerializeField] private float moveSpeed = 5f;     // 横移動速度
+    [SerializeField] private float jumpForce = 7f;     // ジャンプ力
+    [SerializeField] private LayerMask groundLayer;    // 地面のレイヤー
 
-    private float _horizontalVelocity;                 // 横方向の移動速度
-    private Rigidbody _rigidbody;                      // プレイヤーのRigidbody
-    private bool _isGrounded;                          // 地面にいるかどうか
+    private float horizontalVelocity;                 // 横方向の移動速度
+    private Rigidbody playerRigidbody;                      // プレイヤーのRigidbody
+    private bool isGrounded;                          // 地面にいるかどうか
 
     /// <summary>
     /// コンポーネントの初期化
@@ -23,8 +23,8 @@ public class PlayerMove : MonoBehaviour
     private void Awake()
     {
         // Rigidbodyコンポーネントを取得
-        _rigidbody = GetComponent<Rigidbody>();
-        if (_rigidbody == null)
+        playerRigidbody = GetComponent<Rigidbody>();
+        if (playerRigidbody == null)
         {
             Debug.LogError("Rigidbody が見つかりません！ プレイヤーに Rigidbody コンポーネントをアタッチしてください。");
         }
@@ -40,7 +40,7 @@ public class PlayerMove : MonoBehaviour
         Vector2 axis = value.Get<Vector2>();
 
         // 横方向の移動速度を保持
-        _horizontalVelocity = axis.x;
+        horizontalVelocity = axis.x;
     }
 
     /// <summary>
@@ -50,19 +50,19 @@ public class PlayerMove : MonoBehaviour
     private void OnJump(InputValue value)
     {
         // ジャンプボタンが押されていて、かつ地面にいる場合のみジャンプを実行
-        if (_isGrounded && value.isPressed)
+        if (isGrounded && value.isPressed)
         {
             // アニメーションをジャンプ状態にする
-            if (_animator != null)
+            if (animator != null)
             {
-                _animator.SetBool("Jump", true);
+                animator.SetBool("Jump", true);
             }
 
             // Rigidbody にジャンプの力を加える
-            _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
+            playerRigidbody.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
             // ジャンプ中は地面にいない状態に設定
-            _isGrounded = false;
+            isGrounded = false;
 
             // 一定時間後にジャンプアニメーションを終了する
             StartCoroutine(SetJumpFalseAfterDelay(0.8f));
@@ -76,7 +76,7 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 横方向と前方向に移動
-        Vector3 movement = new Vector3(_horizontalVelocity * _moveSpeed, 0, _forwardSpeed) * Time.deltaTime;
+        Vector3 movement = new Vector3(horizontalVelocity * moveSpeed, 0, forwardSpeed) * Time.deltaTime;
         transform.position += movement;
     }
 
@@ -87,7 +87,7 @@ public class PlayerMove : MonoBehaviour
     private void FixedUpdate()
     {
         // 地面にいるかどうかを確認
-        _isGrounded = Physics.CheckSphere(transform.position, 0.1f, _groundLayer);
+        isGrounded = Physics.CheckSphere(transform.position, 0.1f, groundLayer);
     }
 
     /// <summary>
@@ -108,12 +108,12 @@ public class PlayerMove : MonoBehaviour
         yield return new WaitForSeconds(delay);
 
         // ジャンプアニメーションを終了
-        if (_animator != null)
+        if (animator != null)
         {
-            _animator.SetBool("Jump", false);
+            animator.SetBool("Jump", false);
         }
 
         // 地面にいる状態に設定
-        _isGrounded = true;
+        isGrounded = true;
     }
 }
