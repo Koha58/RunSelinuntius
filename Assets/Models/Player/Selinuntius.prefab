@@ -210,6 +210,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Selinuntius
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b8d3ca4a5f7cad34fae09855a5657dbf, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
