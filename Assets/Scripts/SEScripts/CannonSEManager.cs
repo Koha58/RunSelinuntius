@@ -12,6 +12,17 @@ public class CannonSEManager : MonoBehaviour
     [SerializeField] private AudioClip cannonFireSound;    // 大砲発射時の効果音クリップ
     [SerializeField] private AudioClip cannonImpactSound; // 大砲着弾時の効果音クリップ
 
+    [SerializeField] private LayerMask groundLayer; // 地面のレイヤー
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // 衝突したオブジェクトのレイヤーが地面のレイヤーと一致する場合
+        if (((1 << collision.gameObject.layer) & groundLayer) != 0)
+        {
+            PlayCannonImpactSound();
+        }
+    }
+
     /// <summary>
     /// 大砲発射時の効果音を再生するメソッド
     /// </summary>
