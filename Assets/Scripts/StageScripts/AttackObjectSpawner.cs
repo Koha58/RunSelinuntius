@@ -13,7 +13,7 @@ public class AttackObjectSpawner : MonoBehaviour
 
     [SerializeField] private float spawnInterval = 5.0f; // 生成間隔
 
-    [SerializeField] private float distanceFromPlayer = 40.0f; // プレイヤーから手前の距離
+    [SerializeField] private float distanceFromPlayer = 35.0f; // プレイヤーから手前の距離
 
     [SerializeField] private float minX = -5.0f; // 移動可能範囲の最小X座標
 

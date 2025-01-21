@@ -323,7 +323,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 6a876baa5c9ea6f4d96c6e3296ee008f, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.5
+  m_Volume: 0.3
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -511,8 +511,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Barrel
       objectReference: {fileID: 0}
-    - target: {fileID: 862592986140479894, guid: ef68d3a7e5b8fce40969bc64e3eed74a, type: 3}
-      propertyPath: m_IsActive
+    - target: {fileID: 4583412873637974522, guid: ef68d3a7e5b8fce40969bc64e3eed74a, type: 3}
+      propertyPath: m_PlayOnAwake
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -555,7 +555,7 @@ MonoBehaviour:
   - {fileID: 3884837602681658032, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
   player: {fileID: 802400554}
   spawnInterval: 5
-  distanceFromPlayer: 40
+  distanceFromPlayer: 35
   minX: -5
   maxX: 5
   cannonSEManager: {fileID: 5726591882740707775, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
@@ -757,17 +757,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: IronBall
       objectReference: {fileID: 0}
-    - target: {fileID: 3884837602681658032, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6329310433099251865, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.23
       objectReference: {fileID: 0}
     - target: {fileID: 6329310433099251865, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.526
+      value: 12.61
       objectReference: {fileID: 0}
     - target: {fileID: 6329310433099251865, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
       propertyPath: m_LocalPosition.z
@@ -799,10 +795,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6329310433099251865, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8885145025915329072, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
-      propertyPath: m_IsTrigger
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -861,10 +853,6 @@ PrefabInstance:
     - target: {fileID: 4453908617162543016, guid: 36b941aa3cfbf554580714ac937cd85b, type: 3}
       propertyPath: m_Name
       value: ArrowAttack
-      objectReference: {fileID: 0}
-    - target: {fileID: 4453908617162543016, guid: 36b941aa3cfbf554580714ac937cd85b, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

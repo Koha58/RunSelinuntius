@@ -14,6 +14,11 @@ public class CannonSEManager : MonoBehaviour
 
     [SerializeField] private LayerMask groundLayer; // 地面のレイヤー
 
+    private void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+        audioSource.PlayOneShot(cannonFireSound);
+    }
     private void OnCollisionEnter(Collision collision)
     {
         // 衝突したオブジェクトのレイヤーが地面のレイヤーと一致する場合
