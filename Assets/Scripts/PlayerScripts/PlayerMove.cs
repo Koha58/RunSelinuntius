@@ -7,14 +7,21 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class PlayerMove : MonoBehaviour
 {
+    [Header("移動設定")]
     [SerializeField] private Animator animator;        // プレイヤーのアニメーター
     [SerializeField] private float forwardSpeed = 5f;  // 前方向移動速度
     [SerializeField] private float moveSpeed = 5f;     // 横移動速度
     [SerializeField] private float jumpForce = 7f;     // ジャンプ力
     [SerializeField] private LayerMask groundLayer;    // 地面のレイヤー
 
+    [Header("地面判定設定")]
+    [SerializeField] private float groundCheckRadius = 0.1f; // 地面チェックの半径
+
+    [Header("アニメーション設定")]
+    [SerializeField] private float jumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
+
     private float horizontalVelocity;                 // 横方向の移動速度
-    private Rigidbody playerRigidbody;                      // プレイヤーのRigidbody
+    private Rigidbody playerRigidbody;               // プレイヤーのRigidbody
     private bool isGrounded;                          // 地面にいるかどうか
 
     /// <summary>
@@ -65,7 +72,7 @@ public class PlayerMove : MonoBehaviour
             isGrounded = false;
 
             // 一定時間後にジャンプアニメーションを終了する
-            StartCoroutine(SetJumpFalseAfterDelay(0.8f));
+            StartCoroutine(SetJumpFalseAfterDelay(jumpAnimationDuration));
         }
     }
 
@@ -87,7 +94,7 @@ public class PlayerMove : MonoBehaviour
     private void FixedUpdate()
     {
         // 地面にいるかどうかを確認
-        isGrounded = Physics.CheckSphere(transform.position, 0.1f, groundLayer);
+        isGrounded = Physics.CheckSphere(transform.position, groundCheckRadius, groundLayer);
     }
 
     /// <summary>
@@ -96,7 +103,7 @@ public class PlayerMove : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, 0.1f);
+        Gizmos.DrawWireSphere(transform.position, groundCheckRadius);
     }
 
     /// <summary>

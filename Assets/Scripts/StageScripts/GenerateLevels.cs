@@ -7,18 +7,19 @@ using UnityEngine;
 /// </summary>
 public class GenerateLevels : MonoBehaviour
 {
-    // レベルオブジェクトを格納する配列
-    [SerializeField] private GameObject[] level;
-    // 生成されるレベルの新しいz座標
-    [SerializeField] private int zPos = 392;
-    // レベルを生成中かどうかを表すフラグ
-    [SerializeField] private bool creatingLevel = false;
-    // ランダムなレベルを選択するための数字
-    [SerializeField] private int lvlNum;
+    [Header("レベル設定")]
+    [SerializeField] private GameObject[] level;              // レベルオブジェクトを格納する配列
+    [SerializeField] private int initialZPos = 392;           // 初期のz座標
+    [SerializeField] private int levelSpacing = 98;           // レベル間の距離
+    [SerializeField] private float generationDelay = 20f;     // レベル生成の間隔
+
+    private int zPos;                                         // 現在のz座標
+    private bool creatingLevel = false;                       // レベルを生成中かどうかのフラグ
 
     void Start()
     {
-        // 初期化処理を実装する場所
+        // 初期のz座標を設定
+        zPos = initialZPos;
     }
 
     void Update()
@@ -26,27 +27,27 @@ public class GenerateLevels : MonoBehaviour
         // レベルが生成中でない場合、レベル生成を始める
         if (!creatingLevel)
         {
-            creatingLevel = true; // 生成中フラグを終了済みに設定
+            creatingLevel = true; // 生成中フラグを設定
             StartCoroutine(GenerateLvl()); // 非同期メソッドを実行
         }
     }
 
     /// <summary>
-    /// 新しいレベルを生成するコルチンメソッド
+    /// 新しいレベルを生成するコルーチン
     /// </summary>
     IEnumerator GenerateLvl()
     {
         // レベルオブジェクトの配列からランダムな項目を選択
-        lvlNum = Random.Range(0, 4); // レベルオブジェクトのインデックス(0から4の間)
+        int lvlNum = Random.Range(0, level.Length);
 
         // 新しいレベルを生成
         Instantiate(level[lvlNum], new Vector3(0, 0, zPos), Quaternion.identity);
 
         // レベルを生成する位置を更新
-        zPos += 98;
+        zPos += levelSpacing;
 
         // 次の生成までの一時停止
-        yield return new WaitForSeconds(20);
+        yield return new WaitForSeconds(generationDelay);
 
         // レベル生成が終了したのでフラグをリセット
         creatingLevel = false;

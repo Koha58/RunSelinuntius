@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3667299111544143847}
   - component: {fileID: 4613068601821505880}
   - component: {fileID: 6668706777327190922}
+  - component: {fileID: 2876088213362133938}
   m_Layer: 0
   m_Name: ArrowAttack
   m_TagString: Untagged
@@ -115,6 +116,19 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 2
   m_Center: {x: -1.42, y: 0, z: -27.5}
+--- !u!114 &2876088213362133938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4453908617162543016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4faafb1b5379a0e4a953bd05cc4de46a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 5
 --- !u!1001 &142775001087279008
 PrefabInstance:
   m_ObjectHideFlags: 0

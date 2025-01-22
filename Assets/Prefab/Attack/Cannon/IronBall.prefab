@@ -240,3 +240,6 @@ MonoBehaviour:
   audioSource: {fileID: 428545543719937451}
   cannonFireSound: {fileID: 8300000, guid: 23b1b00cdfd58234a81269302876a53f, type: 3}
   cannonImpactSound: {fileID: 8300000, guid: 56795cfdb912aab42a58994761fa23c2, type: 3}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 8
