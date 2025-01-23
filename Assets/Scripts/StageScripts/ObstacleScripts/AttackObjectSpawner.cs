@@ -7,29 +7,59 @@ using UnityEngine;
 /// </summary>
 public class AttackObjectSpawner : MonoBehaviour
 {
+    [Header("Prefab設定")]
     [SerializeField] private GameObject[] prefabsToSpawn; // 生成するPrefabの配列
     [SerializeField] private GameObject player; // プレイヤーオブジェクト
-    [SerializeField] private float spawnInterval = 5.0f; // オブジェクト生成間隔（秒）
-    [SerializeField] private float distanceFromPlayer = 35.0f; // プレイヤーからのZ軸方向の距離
-    [SerializeField] private float minX = -4.0f; // 移動可能範囲の最小X座標
-    [SerializeField] private float maxX = 4.0f; // 移動可能範囲の最大X座標
-    [SerializeField] private CannonSEManager cannonSEManager; // 大砲攻撃の効果音を管理するCannonSEManagerクラスの参照
 
-    [Header("オブジェクト生成設定")]
-    [SerializeField] private float specialYOffset = 5.0f; // 特定のPrefab生成時に追加するY軸のオフセット
+    [Header("生成間隔設定")]
+    [SerializeField] private float baseSpawnInterval = 5.0f; // 基本のオブジェクト生成間隔（秒）
+    [SerializeField] private float maxSpawnMultiplier = 2.0f; // HP最大時の生成間隔倍率
+    [SerializeField] private float minSpawnMultiplier = 0.5f; // HP最小時の生成間隔倍率
+
+    [Header("生成位置設定")]
+    [SerializeField] private float distanceFromPlayer = 40.0f; // プレイヤーからのZ軸方向の距離
+    [SerializeField] private float minXOffset = -7.0f; // 初期位置からのX座標最小オフセット
+    [SerializeField] private float maxXOffset = 8.0f; // 初期位置からのX座標最大オフセット
+    [SerializeField] private float spawnYOffset = 0.7f; // 通常Prefab生成時のY軸オフセット
+    [SerializeField] private float specialYOffset = 5.0f; // 特定Prefab生成時のY軸オフセット
+
+    [Header("効果音・削除設定")]
+    [SerializeField] private CannonSEManager cannonSEManager; // 大砲攻撃の効果音を管理するクラスの参照
     [SerializeField] private float destroyDelay = 10.0f; // オブジェクトを削除するまでの遅延時間（秒）
-    [SerializeField] private float positionCheckDelay = 0.1f; // オブジェクト生成後の位置確認遅延（秒）
 
+    [Header("プレイヤー状態")]
+    [SerializeField] private PlayerStatus playerStatus; // プレイヤーのHP情報
+
+    private Vector3 playerInitialPosition; // プレイヤーの初期位置
     private float timer = 0.0f; // オブジェクト生成間隔を計測するタイマー
 
-    /// <summary>
-    /// 毎フレーム更新処理
-    /// </summary>
+    void Start()
+    {
+        // プレイヤーの初期位置を保存
+        if (player != null)
+        {
+            playerInitialPosition = player.transform.position;
+        }
+        else
+        {
+            Debug.LogError("Player object is not assigned!");
+        }
+    }
+
     void Update()
     {
         timer += Time.deltaTime; // 経過時間を加算
 
-        // 生成間隔を超えた場合、オブジェクトを生成する
+        // HPに基づいて動的に生成間隔を計算
+        float hpRatio = playerStatus.CurrentHP / (float)playerStatus.MaxHP;
+
+        // HPの割合に応じて生成間隔を補間
+        float spawnInterval = Mathf.Lerp(
+            baseSpawnInterval * maxSpawnMultiplier,
+            baseSpawnInterval * minSpawnMultiplier,
+            hpRatio
+        );
+
         if (timer >= spawnInterval)
         {
             SpawnRandomObject(); // ランダムなオブジェクトを生成
@@ -42,7 +72,6 @@ public class AttackObjectSpawner : MonoBehaviour
     /// </summary>
     void SpawnRandomObject()
     {
-        // 生成するPrefabまたはプレイヤーが設定されていない場合はエラーを表示して終了
         if (prefabsToSpawn.Length == 0 || player == null)
         {
             Debug.LogError("Prefabまたはプレイヤーが設定されていません！");
@@ -53,66 +82,35 @@ public class AttackObjectSpawner : MonoBehaviour
         int randomIndex = Random.Range(0, prefabsToSpawn.Length);
         GameObject selectedPrefab = prefabsToSpawn[randomIndex];
 
-        // プレイヤーの現在位置を取得
-        Vector3 playerPosition = player.transform.position;
-
-        // 移動可能範囲内でランダムなX座標を計算
-        float randomX = Random.Range(playerPosition.x + minX, playerPosition.x + maxX);
+        // プレイヤー初期位置を基準にランダムなX座標を計算
+        float randomX = Random.Range(playerInitialPosition.x + minXOffset, playerInitialPosition.x + maxXOffset);
 
         // プレイヤーの前方にオブジェクトを配置する位置を計算
-        Vector3 spawnPosition = new Vector3(randomX, playerPosition.y, playerPosition.z + Mathf.Abs(distanceFromPlayer));
+        Vector3 spawnPosition = new Vector3(randomX, spawnYOffset, player.transform.position.z + Mathf.Abs(distanceFromPlayer));
 
-        // 特定のPrefab（配列のインデックスが2）であれば、追加のY軸オフセットを設定
-        if (randomIndex == 2)
+        // 特定のPrefabの場合は特別なYオフセットを適用
+        if (randomIndex == 2) // インデックス2のPrefabに特殊効果を適用
         {
-            spawnPosition.y = playerPosition.y + specialYOffset; // Y軸を変更
+            spawnPosition.y = player.transform.position.y + specialYOffset;
             cannonSEManager.PlayCannonFireSound(); // 効果音を再生
-            Debug.Log("Changing Y position for third prefab");
         }
 
-        // Prefabを生成し、指定した位置に配置
+        // Prefabを生成
         GameObject obj = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
-        Debug.Log($"Spawn Position Before Animation: {obj.transform.position}");
 
-        // 生成後の位置を一定時間後に確認する
-        StartCoroutine(CheckPositionAfterDelay(obj, positionCheckDelay));
-
-        // 指定した時間後にオブジェクトを削除する
+        // 指定した時間後にオブジェクトを削除
         StartCoroutine(DestroyObjectAfterDelay(obj, destroyDelay));
     }
 
     /// <summary>
     /// 指定時間後にオブジェクトを削除するコルーチン
     /// </summary>
-    /// <param name="obj">削除するオブジェクト</param>
-    /// <param name="delay">削除までの遅延時間（秒）</param>
     IEnumerator DestroyObjectAfterDelay(GameObject obj, float delay)
     {
-        // 指定した時間だけ待機
         yield return new WaitForSeconds(delay);
-
-        // オブジェクトが存在する場合のみ削除
         if (obj != null)
         {
             Destroy(obj);
-            Debug.Log("Object destroyed after delay.");
-        }
-    }
-
-    /// <summary>
-    /// 生成されたオブジェクトの位置を一定時間後に確認するコルーチン
-    /// </summary>
-    /// <param name="obj">確認するオブジェクト</param>
-    /// <param name="delay">確認までの遅延時間（秒）</param>
-    IEnumerator CheckPositionAfterDelay(GameObject obj, float delay)
-    {
-        // 指定した時間だけ待機
-        yield return new WaitForSeconds(delay);
-
-        // オブジェクトが存在する場合、現在の位置をログに出力
-        if (obj != null)
-        {
-            Debug.Log($"Spawn Position After Animation: {obj.transform.position}");
         }
     }
 }

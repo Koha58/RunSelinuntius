@@ -10,7 +10,7 @@ public class GenerateLevels : MonoBehaviour
     [SerializeField] private GameObject[] level;              // レベルオブジェクトを格納する配列
     [SerializeField] private int initialZPos = 392;           // 初期のz座標
     [SerializeField] private int levelSpacing = 98;           // レベル間の距離
-    [SerializeField] private float baseGenerationDelay = 20f; // 基本の生成間隔（速度に応じて変化）
+    [SerializeField] private float baseGenerationDelay = 30f; // 基本の生成間隔（速度に応じて変化）
 
     [Header("速度設定")]
     [SerializeField] private PlayerMove playerMove;           // プレイヤーの移動管理クラス
