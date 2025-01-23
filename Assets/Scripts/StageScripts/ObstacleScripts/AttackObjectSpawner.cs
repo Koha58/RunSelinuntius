@@ -11,8 +11,8 @@ public class AttackObjectSpawner : MonoBehaviour
     [SerializeField] private GameObject player; // プレイヤーオブジェクト
     [SerializeField] private float spawnInterval = 5.0f; // オブジェクト生成間隔（秒）
     [SerializeField] private float distanceFromPlayer = 35.0f; // プレイヤーからのZ軸方向の距離
-    [SerializeField] private float minX = -5.0f; // 移動可能範囲の最小X座標
-    [SerializeField] private float maxX = 5.0f; // 移動可能範囲の最大X座標
+    [SerializeField] private float minX = -4.0f; // 移動可能範囲の最小X座標
+    [SerializeField] private float maxX = 4.0f; // 移動可能範囲の最大X座標
     [SerializeField] private CannonSEManager cannonSEManager; // 大砲攻撃の効果音を管理するCannonSEManagerクラスの参照
 
     [Header("オブジェクト生成設定")]

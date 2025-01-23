@@ -20,6 +20,7 @@ public class PlayerMove : MonoBehaviour
     [Header("アニメーション設定")]
     [SerializeField] private float jumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
 
+    private float speedMultiplier = 1f;               // 速度倍率
     private float horizontalVelocity;                 // 横方向の移動速度
     private Rigidbody playerRigidbody;               // プレイヤーのRigidbody
     private bool isGrounded;                          // 地面にいるかどうか
@@ -83,7 +84,7 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         // 横方向と前方向に移動
-        Vector3 movement = new Vector3(horizontalVelocity * moveSpeed, 0, forwardSpeed) * Time.deltaTime;
+        Vector3 movement = new Vector3(horizontalVelocity * moveSpeed * speedMultiplier, 0, forwardSpeed * speedMultiplier) * Time.deltaTime;
         transform.position += movement;
     }
 
@@ -122,5 +123,21 @@ public class PlayerMove : MonoBehaviour
 
         // 地面にいる状態に設定
         isGrounded = true;
+    }
+
+    //// <summary>
+    /// 速度倍率を設定する
+    /// </summary>
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        speedMultiplier = multiplier;
+    }
+
+    /// <summary>
+    /// 現在の速度を取得
+    /// </summary>
+    public float GetCurrentSpeed()
+    {
+        return moveSpeed * speedMultiplier;
     }
 }
