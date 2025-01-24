@@ -245,6 +245,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b8d3ca4a5f7cad34fae09855a5657dbf, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5734341985758189233}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b8d3ca4a5f7cad34fae09855a5657dbf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5472223554166875421}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b8d3ca4a5f7cad34fae09855a5657dbf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6263991767863104675}
   m_SourcePrefab: {fileID: 100100000, guid: b8d3ca4a5f7cad34fae09855a5657dbf, type: 3}
 --- !u!1 &8639307202424730954 stripped
 GameObject:
@@ -379,6 +385,8 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  groundCheckRadius: 0.1
+  jumpAnimationDuration: 0.8
 --- !u!114 &5734341985758189233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,6 +401,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minX: -8
   maxX: 8
+--- !u!114 &5472223554166875421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8639307202424730954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8541edf278ec5c947a700d0c108ff485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHP: 100
+  recoveryRate: 0.5
+--- !u!114 &6263991767863104675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8639307202424730954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2380fc6c24b8d48408b4d6fa811baefd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  distanceText: {fileID: 0}
 --- !u!4 &8984448762295332848 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b8d3ca4a5f7cad34fae09855a5657dbf, type: 3}

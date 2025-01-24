@@ -13,7 +13,7 @@ public class AngryGaugeManager : MonoBehaviour
 
     [Header("ゲージ設定")]
     [SerializeField] private float minSpeedMultiplier = 0.5f; // 速度の最小倍率
-    [SerializeField] private float maxSpeedMultiplier = 3f;   // 速度の最大倍率
+    [SerializeField] private float maxSpeedMultiplier = 5f;   // 速度の最大倍率
 
     private float currentGauge;  // 現在のゲージ値 (HPに基づく)
 
