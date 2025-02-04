@@ -40,16 +40,21 @@ public class AngryGaugeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// HPが変化したときの処理
+    /// HPが変化した際に呼ばれるイベントハンドラ。
+    /// ゲージの値を更新し、UIを変更する。
     /// </summary>
+    /// <param name="currentHP">プレイヤーの現在のHP</param>
+    /// <param name="maxHP">プレイヤーの最大HP</param>
     private void OnHealthChanged(int currentHP, int maxHP)
     {
         UpdateBarUI(currentHP, maxHP);
     }
 
     /// <summary>
-    /// HPとゲージを更新し、UIに反映
+    /// HPの変化をUIに反映し、ゲージ値を更新する。
     /// </summary>
+    /// <param name="currentHP">プレイヤーの現在のHP</param>
+    /// <param name="maxHP">プレイヤーの最大HP</param>
     private void UpdateBarUI(int currentHP, int maxHP)
     {
         if (barImage != null)
@@ -58,7 +63,7 @@ public class AngryGaugeManager : MonoBehaviour
             float fillAmount = (float)currentHP / maxHP;
             barImage.fillAmount = fillAmount;
 
-            // currentGauge の値も同期
+            // ゲージの内部値を更新
             currentGauge = currentHP;
         }
     }

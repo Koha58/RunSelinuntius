@@ -30,8 +30,11 @@ public class GameOverUISelect : MonoBehaviour
     }
 
     /// <summary>
-    /// 入力デバイスが変更されたときに呼び出される
+    /// 入力デバイスが変更された際に呼び出されるコールバック。
+    /// UIを適切に更新する。
     /// </summary>
+    /// <param name="device">変更が発生した入力デバイス</param>
+    /// <param name="change">デバイスの変更内容（追加・削除など）</param>
     private void OnDeviceChange(InputDevice device, InputDeviceChange change)
     {
         if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)

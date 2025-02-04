@@ -103,9 +103,11 @@ public class AttackObjectSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// 指定時間後にオブジェクトを削除するコルーチン
+    /// 指定時間後にオブジェクトを削除するコルーチン。
     /// </summary>
-    IEnumerator DestroyObjectAfterDelay(GameObject obj, float delay)
+    /// <param name="obj">削除対象のゲームオブジェクト</param>
+    /// <param name="delay">削除までの遅延時間（秒）</param>
+    private IEnumerator DestroyObjectAfterDelay(GameObject obj, float delay)
     {
         yield return new WaitForSeconds(delay);
         if (obj != null)
