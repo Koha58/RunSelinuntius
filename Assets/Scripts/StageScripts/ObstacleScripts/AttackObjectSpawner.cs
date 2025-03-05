@@ -24,7 +24,6 @@ public class AttackObjectSpawner : MonoBehaviour
     [SerializeField] private float specialYOffset = 5.0f; // 特定Prefab生成時のY軸オフセット
 
     [Header("効果音・削除設定")]
-    [SerializeField] private CannonSEManager cannonSEManager; // 大砲攻撃の効果音を管理するクラスの参照
     [SerializeField] private float destroyDelay = 10.0f; // オブジェクトを削除するまでの遅延時間（秒）
 
     [Header("プレイヤー状態")]
@@ -92,7 +91,6 @@ public class AttackObjectSpawner : MonoBehaviour
         if (randomIndex == 2) // インデックス2のPrefabに特殊効果を適用
         {
             spawnPosition.y = player.transform.position.y + specialYOffset;
-            cannonSEManager.PlayCannonFireSound(); // 効果音を再生
         }
 
         // Prefabを生成

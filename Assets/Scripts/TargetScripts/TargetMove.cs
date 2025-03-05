@@ -11,7 +11,7 @@ public class TargetMove : MonoBehaviour
     [Header("Targetの基本設定")]
     [SerializeField] private Transform player; // プレイヤーのTransform
     [SerializeField] private float baseSpeed = 10.0f; // Targetの基準速度
-    [SerializeField] private float targetDistance = 200.0f; // プレイヤーとの目標距離
+    [SerializeField] private float targetDistance = 1000.0f; // プレイヤーとの目標距離
 
     [Header("左右移動設定")]
     [SerializeField] private float lateralMovementAmplitude = 5.0f; // 左右移動の振幅
