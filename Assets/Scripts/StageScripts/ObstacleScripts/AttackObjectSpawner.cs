@@ -17,11 +17,14 @@ public class AttackObjectSpawner : MonoBehaviour
     [SerializeField] private float minSpawnMultiplier = 0.2f; // HP最小時の生成間隔倍率
 
     [Header("生成位置設定")]
-    [SerializeField] private float distanceFromPlayer = 40.0f; // プレイヤーからのZ軸方向の距離
+    [SerializeField] private float distanceFromPlayer = 20.0f; // PrefabのデフォルトZ座標オフセット
     [SerializeField] private float minXOffset = -7.0f; // 初期位置からのX座標最小オフセット
     [SerializeField] private float maxXOffset = 8.0f; // 初期位置からのX座標最大オフセット
-    [SerializeField] private float spawnYOffset = 0.7f; // 通常Prefab生成時のY軸オフセット
-    [SerializeField] private float specialYOffset = 5.0f; // 特定Prefab生成時のY軸オフセット
+    [SerializeField] private float spawnYOffset = 0.7f; // Prefab生成時のデフォルトY軸オフセット
+
+    [Header("Prefabの生成位置設定")]
+    [SerializeField] private float[] specialYOffset = new float[] { 0.1f, 0.1f, 5.0f }; // y軸の値を設定{ ArrowAttack, Barrel, IronBall}
+    [SerializeField] private float[] specialZOffset = new float[] { 45.0f, 100.0f, 20.0f }; // z軸の値を設定{ ArrowAttack, Barrel, IronBall}
 
     [Header("効果音・削除設定")]
     [SerializeField] private float destroyDelay = 10.0f; // オブジェクトを削除するまでの遅延時間（秒）
@@ -34,7 +37,6 @@ public class AttackObjectSpawner : MonoBehaviour
 
     void Start()
     {
-        // プレイヤーの初期位置を保存
         if (player != null)
         {
             playerInitialPosition = player.transform.position;
@@ -61,8 +63,8 @@ public class AttackObjectSpawner : MonoBehaviour
 
         if (timer >= spawnInterval)
         {
-            SpawnRandomObject(); // ランダムなオブジェクトを生成
-            timer = 0.0f; // タイマーをリセット
+            SpawnRandomObject();
+            timer = 0.0f;
         }
     }
 
@@ -83,15 +85,21 @@ public class AttackObjectSpawner : MonoBehaviour
 
         // プレイヤー初期位置を基準にランダムなX座標を計算
         float randomX = Random.Range(playerInitialPosition.x + minXOffset, playerInitialPosition.x + maxXOffset);
+        float spawnY = spawnYOffset;
+        float spawnZ = player.transform.position.z + distanceFromPlayer;
 
-        // プレイヤーの前方にオブジェクトを配置する位置を計算
-        Vector3 spawnPosition = new Vector3(randomX, spawnYOffset, player.transform.position.z + Mathf.Abs(distanceFromPlayer));
-
-        // 特定のPrefabの場合は特別なYオフセットを適用
-        if (randomIndex == 2) // インデックス2のPrefabに特殊効果を適用
+        // Prefab毎のオフセットを適用
+        if (randomIndex < specialYOffset.Length)
         {
-            spawnPosition.y = player.transform.position.y + specialYOffset;
+            spawnY = specialYOffset[randomIndex];
         }
+        if (randomIndex < specialZOffset.Length)
+        {
+            spawnZ = player.transform.position.z + specialZOffset[randomIndex];
+        }
+
+        // 生成位置を決定
+        Vector3 spawnPosition = new Vector3(randomX, spawnY, spawnZ);
 
         // Prefabを生成
         GameObject obj = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);

@@ -48,7 +48,7 @@ public class CannonSEManager : MonoBehaviour
             Destroy(soundObject, cannonImpactSound.length);
 
             // ’e©‘Ì‚ğíœ
-            Destroy(gameObject);
+            Destroy(gameObject, cannonImpactSound.length);
         }
     }
 

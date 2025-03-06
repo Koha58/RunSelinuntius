@@ -1114,11 +1114,18 @@ MonoBehaviour:
   baseSpawnInterval: 2
   maxSpawnMultiplier: 2
   minSpawnMultiplier: 0.2
-  distanceFromPlayer: 40
+  distanceFromPlayer: 15
   minXOffset: -7
   maxXOffset: 8
   spawnYOffset: 0.7
-  specialYOffset: 5
+  specialYOffset:
+  - 0.1
+  - 0.1
+  - 5
+  specialZOffset:
+  - 45
+  - 100
+  - 20
   destroyDelay: 10
   playerStatus: {fileID: 802400563}
 --- !u!4 &1730752352
