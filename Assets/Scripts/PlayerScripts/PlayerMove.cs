@@ -44,6 +44,12 @@ public class PlayerMove : MonoBehaviour
     /// <param name="value">入力値 (Vector2)</param>
     private void OnMove(InputValue value)
     {
+        // ジャンプ中は移動を無効化
+        if (!isGrounded)
+        {
+            horizontalVelocity = 0;
+            return;
+        }
         // 左スティックの入力値を取得
         Vector2 axis = value.Get<Vector2>();
 
