@@ -107,17 +107,4 @@ public class TargetMove : MonoBehaviour
             }
         }
     }
-
-    /// <summary>
-    /// プレイヤーがターゲットに接触した時に呼ばれる
-    /// </summary>
-    /// <param name="other">接触したCollider</param>
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            Debug.Log("プレイヤーがTargetに接触！ゲームクリア！");
-            SceneManager.LoadScene("GameClearScene");
-        }
-    }
 }

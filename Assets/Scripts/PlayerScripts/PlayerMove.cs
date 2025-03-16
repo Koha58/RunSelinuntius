@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// プレイヤーの動きを制御するクラス
@@ -20,10 +21,17 @@ public class PlayerMove : MonoBehaviour
     [Header("アニメーション設定")]
     [SerializeField] private float jumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
 
+    [Header("時間操作設定")]
+    [SerializeField] private float slowMotionScale = 0.5f; // スローモーション時の速度倍率
+    [SerializeField] private float normalTimeScale = 1f; // 通常時の速度倍率
+    [SerializeField] private float defaultFixedDeltaTime = 0.02f; // デフォルトの FixedDeltaTime
+
     private float speedMultiplier = 1f;               // 速度倍率
     private float horizontalVelocity;                 // 横方向の移動速度
     private Rigidbody playerRigidbody;               // プレイヤーのRigidbody
     private bool isGrounded;                          // 地面にいるかどうか
+
+    private bool isNearTarget = false; // FinalAttack可能範囲内にいるか
 
     /// <summary>
     /// コンポーネントの初期化
@@ -80,6 +88,21 @@ public class PlayerMove : MonoBehaviour
 
             // 一定時間後にジャンプアニメーションを終了する
             StartCoroutine(SetJumpFalseAfterDelay(jumpAnimationDuration));
+        }
+    }
+
+    /// <summary>
+    /// 攻撃入力を受け取る
+    /// </summary>
+    /// <param name="value">入力値 (isPressed)</param>
+    private void OnFinalAttack(InputValue value)
+    {
+        // FinalAttack範囲内かつ、ボタンが押された場合のみ攻撃を実行
+        if (isNearTarget && value.isPressed)
+        {
+            // 攻撃処理を実行
+            Debug.Log("Final Attack!");
+            SceneManager.LoadScene("GameClearScene");
         }
     }
 
@@ -145,5 +168,57 @@ public class PlayerMove : MonoBehaviour
     public float GetCurrentSpeed()
     {
         return moveSpeed * speedMultiplier;
+    }
+
+    /// <summary>
+    /// FinalAttack が可能かを判定するメソッド
+    /// </summary>
+    internal bool IsFinalAttackPossible()
+    {
+        return isNearTarget;
+    }
+
+    /// <summary>
+    /// Target に触れたら(FinalAttack可能なら)ゲームの動きを遅くする
+    /// </summary>
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Target"))
+        {
+            isNearTarget = true;
+            SetSlowMotion(true);
+        }
+    }
+
+    /// <summary>
+    /// Target から離れたら元の速度に戻す
+    /// </summary>
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Target"))
+        {
+            isNearTarget = false;
+            SetSlowMotion(false);
+        }
+    }
+
+    /// <summary>
+    /// シーン全体のスローモーションを設定する
+    /// </summary>
+    /// <param name="isSlow">trueなら遅く、falseなら通常速度</param>
+    private void SetSlowMotion(bool isSlow)
+    {
+        if (isSlow)
+        {
+            Time.timeScale = slowMotionScale;
+            Time.fixedDeltaTime = defaultFixedDeltaTime * slowMotionScale;
+            speedMultiplier = slowMotionScale;
+        }
+        else
+        {
+            Time.timeScale = normalTimeScale;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+            speedMultiplier = normalTimeScale;
+        }
     }
 }

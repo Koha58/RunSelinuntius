@@ -61,7 +61,7 @@ PrefabInstance:
       addedObject: {fileID: 3222205972456778183}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a3f78c3ec2df16443a3bad9b8d8c3927, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6092967728945166329}
+      addedObject: {fileID: 5290050910772903410}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a3f78c3ec2df16443a3bad9b8d8c3927, type: 3}
       insertIndex: -1
       addedObject: {fileID: 543910599207151977}
@@ -98,8 +98,8 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!136 &6092967728945166329
-CapsuleCollider:
+--- !u!65 &5290050910772903410
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -116,11 +116,9 @@ CapsuleCollider:
   m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 10
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.8, z: 0}
+  serializedVersion: 3
+  m_Size: {x: 30, y: 1, z: 20}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &543910599207151977
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -24,7 +24,7 @@ public class AttackObjectSpawner : MonoBehaviour
 
     [Header("Prefabの生成位置設定")]
     [SerializeField] private float[] specialYOffset = new float[] { 0.1f, 0.1f, 5.0f }; // y軸の値を設定{ ArrowAttack, Barrel, IronBall}
-    [SerializeField] private float[] specialZOffset = new float[] { 45.0f, 100.0f, 20.0f }; // z軸の値を設定{ ArrowAttack, Barrel, IronBall}
+    [SerializeField] private float[] specialZOffset = new float[] { 40.0f, 100.0f, 20.0f }; // z軸の値を設定{ ArrowAttack, Barrel, IronBall}
 
     [Header("効果音・削除設定")]
     [SerializeField] private float destroyDelay = 10.0f; // オブジェクトを削除するまでの遅延時間（秒）
