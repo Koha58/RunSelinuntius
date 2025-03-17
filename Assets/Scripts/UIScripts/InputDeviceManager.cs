@@ -17,6 +17,9 @@ public class InputDeviceManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(gameObject); // シーンをまたいでも残る
+
+            // フレームレートを60に固定
+            Application.targetFrameRate = 60;
         }
         else
         {

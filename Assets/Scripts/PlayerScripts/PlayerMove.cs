@@ -8,23 +8,37 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class PlayerMove : MonoBehaviour
 {
+    // 定数の宣言
+    private const float DefaultForwardSpeed = 5f;  // 前方向移動速度
+    private const float DefaultMoveSpeed = 5f;     // 横移動速度
+    private const float DefaultJumpForce = 7f;     // ジャンプ力
+    private const float DefaultGroundCheckRadius = 0.1f; // 地面チェックの半径
+    private const float DefaultJumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
+    private const float DefaultSlowMotionScale = 0.5f; // スローモーション時の速度倍率
+    private const float DefaultNormalTimeScale = 1f; // 通常時の速度倍率
+    private const float DefaultFixedDeltaTime = 0.02f; // デフォルトの FixedDeltaTime
+    private const float TargetSpeedMultiplier = 5f; // Targetの速度を変更する倍率
+
     [Header("移動設定")]
     [SerializeField] private Animator animator;        // プレイヤーのアニメーター
-    [SerializeField] private float forwardSpeed = 5f;  // 前方向移動速度
-    [SerializeField] private float moveSpeed = 5f;     // 横移動速度
-    [SerializeField] private float jumpForce = 7f;     // ジャンプ力
+    [SerializeField] private float forwardSpeed = DefaultForwardSpeed;  // 前方向移動速度
+    [SerializeField] private float moveSpeed = DefaultMoveSpeed;     // 横移動速度
+    [SerializeField] private float jumpForce = DefaultJumpForce;     // ジャンプ力
     [SerializeField] private LayerMask groundLayer;    // 地面のレイヤー
 
     [Header("地面判定設定")]
-    [SerializeField] private float groundCheckRadius = 0.1f; // 地面チェックの半径
+    [SerializeField] private float groundCheckRadius = DefaultGroundCheckRadius; // 地面チェックの半径
 
     [Header("アニメーション設定")]
-    [SerializeField] private float jumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
+    [SerializeField] private float jumpAnimationDuration = DefaultJumpAnimationDuration; // ジャンプアニメーション終了までの遅延時間
 
     [Header("時間操作設定")]
-    [SerializeField] private float slowMotionScale = 0.5f; // スローモーション時の速度倍率
-    [SerializeField] private float normalTimeScale = 1f; // 通常時の速度倍率
-    [SerializeField] private float defaultFixedDeltaTime = 0.02f; // デフォルトの FixedDeltaTime
+    [SerializeField] private float slowMotionScale = DefaultSlowMotionScale; // スローモーション時の速度倍率
+    [SerializeField] private float normalTimeScale = DefaultNormalTimeScale; // 通常時の速度倍率
+    [SerializeField] private float defaultFixedDeltaTime = DefaultFixedDeltaTime; // デフォルトの FixedDeltaTime
+
+    [Header("FinalAttackSE設定")]
+    [SerializeField] private FinalAttackSEControl seControl; // FinalAttack の SE 制御
 
     private float speedMultiplier = 1f;               // 速度倍率
     private float horizontalVelocity;                 // 横方向の移動速度
@@ -40,6 +54,11 @@ public class PlayerMove : MonoBehaviour
     {
         // Rigidbodyコンポーネントを取得
         playerRigidbody = GetComponent<Rigidbody>();
+
+        // FinalAttack可能範囲内にいない
+        isNearTarget = false;
+        SetSlowMotion(false);
+
         if (playerRigidbody == null)
         {
             Debug.LogError("Rigidbody が見つかりません！ プレイヤーに Rigidbody コンポーネントをアタッチしてください。");
@@ -102,7 +121,12 @@ public class PlayerMove : MonoBehaviour
         {
             // 攻撃処理を実行
             Debug.Log("Final Attack!");
-            SceneManager.LoadScene("GameClearScene");
+
+            // SE を鳴らし、その長さを取得
+            float seDuration = seControl != null ? seControl.PlayFinalAttackSE() : 0f;
+
+            // SE が鳴り終わるまで待ってからシーン遷移
+            StartCoroutine(WaitAndLoadScene(seDuration));
         }
     }
 
@@ -154,7 +178,7 @@ public class PlayerMove : MonoBehaviour
         isGrounded = true;
     }
 
-    //// <summary>
+    /// <summary>
     /// 速度倍率を設定する
     /// </summary>
     public void SetSpeedMultiplier(float multiplier)
@@ -199,6 +223,19 @@ public class PlayerMove : MonoBehaviour
         {
             isNearTarget = false;
             SetSlowMotion(false);
+
+            // runAway の SE を鳴らす
+            if (seControl != null)
+            {
+                seControl.PlayrunAwaySE();
+            }
+
+            // Targetの速度を変更
+            TargetMove targetMove = other.GetComponent<TargetMove>();
+            if (targetMove != null)
+            {
+                targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
+            }
         }
     }
 
@@ -220,5 +257,18 @@ public class PlayerMove : MonoBehaviour
             Time.fixedDeltaTime = defaultFixedDeltaTime;
             speedMultiplier = normalTimeScale;
         }
+    }
+
+    /// <summary>
+    /// 指定された時間待機した後、指定のシーンに遷移するコルーチン
+    /// </summary>
+    /// <param name="waitTime">シーン遷移前に待機する時間（秒）</param>
+    private IEnumerator WaitAndLoadScene(float waitTime)
+    {
+        // 指定された時間だけ待機（FinalAttack の SE の長さを想定）
+        yield return new WaitForSeconds(waitTime);
+
+        // SE の再生が完了した後に、GameClearScene へ遷移
+        SceneManager.LoadScene("GameClearScene");
     }
 }

@@ -27,6 +27,13 @@ public class TargetMove : MonoBehaviour
 
     private Vector3 initialPosition; // 初期位置を記録
 
+    private float currentSpeedMultiplier = 1.0f; // 現在の速度倍率（通常は1）
+
+    private float originalSpeed; // 初期のSpeedを保存
+
+    [Header("runAway後のPlayerとの距離")]
+    [SerializeField] private float distanceThreshold = 500f; // プレイヤーとの距離閾値
+
     /// <summary>
     /// 初期設定を行う
     /// プレイヤーが設定されていない場合、エラーメッセージを表示する
@@ -43,6 +50,8 @@ public class TargetMove : MonoBehaviour
         // 初期位置をプレイヤーの前方に配置
         initialPosition = player.position + Vector3.forward * targetDistance;
         transform.position = initialPosition;
+
+        originalSpeed = baseSpeed;  // 初期速度を保存
     }
 
     /// <summary>
@@ -58,6 +67,9 @@ public class TargetMove : MonoBehaviour
 
         // 左右移動を管理
         ManageLateralMovement();
+
+        // プレイヤーとの距離をチェック
+        CheckDistanceToPlayer();
     }
 
     /// <summary>
@@ -106,5 +118,29 @@ public class TargetMove : MonoBehaviour
                 lateralMovementTimer = 0.0f; // 左右移動タイマーをリセット
             }
         }
+    }
+
+    /// <summary>
+    /// プレイヤーとターゲットとの距離をチェック
+    /// </summary>
+    private void CheckDistanceToPlayer()
+    {
+        float distanceToPlayer = Vector3.Distance(player.position, transform.position);
+
+        // プレイヤーとの距離がdistanceThreshold以上の場合、元の速度に戻す
+        if (distanceToPlayer > distanceThreshold && currentSpeedMultiplier != 1f)
+        {
+            currentSpeedMultiplier = 1f;
+            baseSpeed = originalSpeed;  // 速度を元に戻す
+        }
+    }
+
+    /// <summary>
+    /// FinalAttack範囲に近づいた場合、速度を変更する処理
+    /// </summary>
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        currentSpeedMultiplier = multiplier; // 速度倍率を設定
+        baseSpeed = originalSpeed * multiplier; // 新しい速度を適用
     }
 }
