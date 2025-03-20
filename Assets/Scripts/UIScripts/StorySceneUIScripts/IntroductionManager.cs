@@ -18,6 +18,8 @@ public class IntroductionManager : MonoBehaviour
     [SerializeField] private GameObject scene3; // scene3
     [SerializeField] private GameObject scene4; // scene4
 
+    [SerializeField] private AudioSource bgmSource; // BGM用のAudioSource
+
     // 通常フェーズのセリフ群
     private string[] dialogueLines =
     {
@@ -163,10 +165,12 @@ public class IntroductionManager : MonoBehaviour
         else if (line == "「ありえぬ。」") // このセリフ終了後にUI2を表示
         {
             ShowUI(scene3);
+            StopBGM(); // BGMを停止
         }
         else if (line == "セリヌンティウスもメロスを追いかけ王城を出て行った。") // このセリフ終了後にUI3を表示
         {
             ShowUI(scene4);
+            ResumeBGM(); // BGMを再開
         }
     }
 
@@ -223,5 +227,27 @@ public class IntroductionManager : MonoBehaviour
 
         // 指定されたUIコンポーネントだけを有効にする
         uiToEnable.GetComponent<Image>().enabled = true;
+    }
+
+    /// <summary>
+    /// BGMを停止する
+    /// </summary>
+    private void StopBGM()
+    {
+        if (bgmSource.isPlaying)
+        {
+            bgmSource.Pause();
+        }
+    }
+
+    /// <summary>
+    /// BGMを再開する
+    /// </summary>
+    private void ResumeBGM()
+    {
+        if (!bgmSource.isPlaying)
+        {
+            bgmSource.Play();
+        }
     }
 }
