@@ -29,7 +29,7 @@ public class TitleUIControl : MonoBehaviour
     /// </summary>
     private void LoadGameScene()
     {
-        SceneManager.LoadScene("GameScene");
+        SceneManager.LoadScene("IntroductionScene");
     }
 
 }

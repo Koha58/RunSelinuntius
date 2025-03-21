@@ -1,5 +1,7 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -68,6 +70,7 @@ public class IntroductionManager : MonoBehaviour
     private bool isTyping = false; // 現在文字を表示しているかどうかのフラグ
     private bool isFinalPhase = false; // 赤文字フェーズかどうかのフラグ
     private bool isExtraPhase = false; // 白文字フェーズに戻る状態かどうかのフラグ
+    private bool isNext = false; // テキストごとの表示の終了フラグ
 
     /// <summary>
     /// 最初のセリフを表示開始する。
@@ -82,15 +85,18 @@ public class IntroductionManager : MonoBehaviour
 
         dialogueText.color = normalTextColor; // 最初は白文字
         StartCoroutine(TypeText(dialogueLines[currentLineIndex])); // 最初のセリフを表示開始
+
+        // テキスト表示が終了していない
+        isNext = false;
     }
 
     /// <summary>
     /// ユーザーがクリックした際に次のセリフを表示する。
     /// </summary>
-    void Update()
+    private void OnClick(InputValue value)
     {
         // マウスボタンが押されたかつ、文字入力中でない場合に次のセリフを表示
-        if (Input.GetMouseButtonDown(0) && !isTyping)
+        if (value.isPressed && !isTyping)
         {
             NextLine();
         }
@@ -133,9 +139,9 @@ public class IntroductionManager : MonoBehaviour
             {
                 StartCoroutine(TypeText(extraDialogueLines[currentLineIndex])); // 最後のセリフを表示
             }
-            else // 最後のセリフが終了したら
+            else // 最後のセリフが終了したら、シーンを切り替える
             {
-                dialogueText.text = ""; // 全て終了したらテキストをクリア
+                SceneManager.LoadScene("GameScene");
             }
         }
     }
@@ -147,6 +153,7 @@ public class IntroductionManager : MonoBehaviour
     private IEnumerator TypeText(string line)
     {
         isTyping = true; // 文字表示中
+        isNext = false; // 次のセリフ開始時に false にする
         dialogueText.text = ""; // 新しいテキストを表示するために一度空にする
 
         foreach (char letter in line) // 文字列の1文字ずつ処理
@@ -156,6 +163,7 @@ public class IntroductionManager : MonoBehaviour
         }
 
         isTyping = false; // 文字の表示が完了したので、入力中フラグを解除
+        isNext = true; // 一文が終わったことを示す
 
         // セリフに応じてUIを切り替える
         if (line == "竹馬の友、セリヌンティウスは王城に召された。") // このセリフ終了後にUI1を表示
@@ -249,5 +257,14 @@ public class IntroductionManager : MonoBehaviour
         {
             bgmSource.Play();
         }
+    }
+
+    /// <summary>
+    /// 現在のセリフの表示が完了し、次のセリフへ進むことが可能かどうかを判定する
+    /// </summary>
+    /// <returns>次のセリフへ進める場合は true、進めない場合は false。</returns>
+    internal bool IsNextPossible()
+    {
+        return isNext;
     }
 }
