@@ -16,14 +16,35 @@ public class StoryUIDeviceCheck : MonoBehaviour
     [SerializeField] private Image mouseUI; // マウス用 UI
     [SerializeField] private Color blinkColor = Color.gray; // 点滅時の色
     [SerializeField] private float blinkInterval = 1.0f; // 点滅間隔（秒）
-    [SerializeField] private IntroductionManager introductionManager;
+    [SerializeField] private IntroductionManager introductionManager; // IntroductionManager の参照
+    [SerializeField] private ClearManager clearManager;// ClearManager の参照
+    [SerializeField] private GameOverManager gameOverManager;// GameOverManager の参照
 
     private bool isBlinking = false;   // 現在点滅中かどうか
 
+    private bool isNextSentence = false;   // 次のテキストに移行可能か
+
     private void Awake()
     {
-        // 同じオブジェクトにアタッチされた PlayerMove を取得
-        introductionManager = GetComponent<IntroductionManager>();
+        // IntroductionSceneの場合
+        if(introductionManager != null)
+        {
+            // 同じオブジェクトにアタッチされた IntroductionManager を取得
+            introductionManager = GetComponent<IntroductionManager>();
+        }
+        // GameClearSceneの場合
+        else if (clearManager != null)
+        {
+            // 同じオブジェクトにアタッチされた ClearManager を取得
+            clearManager = GetComponent<ClearManager>();
+        }
+        // GameOverSceneの場合
+        else if (gameOverManager != null)
+        {
+            // 同じオブジェクトにアタッチされた ClearManager を取得
+            gameOverManager = GetComponent<GameOverManager>();
+        }
+
     }
 
     void Update()
@@ -33,15 +54,20 @@ public class StoryUIDeviceCheck : MonoBehaviour
         // 現在の入力デバイスを取得（true: コントローラー, false: キーボード）
         bool isUsingGamepad = InputDeviceManager.Instance.IsUsingGamepad();
 
-        // プレイヤーが FinalAttack 可能かを取得
-        bool isNextSentence = introductionManager.IsNextPossible();
+        // 次のテキストに移行可能かを取得
+        SceneCheck();  // isNextSentence を更新
 
         // UI の表示 / 非表示
         mouseUI.enabled = isNextSentence && !isUsingGamepad;
         keyboardNextUI.enabled = isNextSentence && !isUsingGamepad;
         controllerNextUI.enabled = isNextSentence && isUsingGamepad;
-        controllerSkipUI.enabled = isUsingGamepad;
 
+        // IntroductionScene または GameClearScene の場合
+        if (introductionManager != null || clearManager != null)
+        {
+            controllerSkipUI.enabled = isUsingGamepad;
+        }
+        
         // 点滅処理を開始・停止
         if (isNextSentence && !isBlinking)
         {
@@ -92,15 +118,55 @@ public class StoryUIDeviceCheck : MonoBehaviour
     /// </summary>
     public void Skip()
     {
-        SceneManager.LoadScene("GameScene");
+        // スキップ先を選択（introductionManager または clearManager のどちらが存在するかで分岐）
+        if (introductionManager != null)
+        {
+            SceneManager.LoadScene("GameScene");
+        }
+        else if(clearManager != null)
+        {
+            SceneManager.LoadScene("TitleScene");
+        }
     }
 
     /// <summary>
-    /// ユーザーがスキップ操作を行った際に、ゲームシーンへ遷移する。
+    /// ユーザーがスキップ操作を行った際に、対応するシーンへ遷移する。
     /// </summary>
     /// <param name="value">スキップ操作の入力値。</param>
     private void OnSkip(InputValue value)
     {
-        SceneManager.LoadScene("GameScene");
+        // スキップ先を選択（introductionManager または clearManager のどちらが存在するかで分岐）
+        if (introductionManager != null)
+        {
+            SceneManager.LoadScene("GameScene");
+        }
+        else if (clearManager != null)
+        {
+            SceneManager.LoadScene("TitleScene");
+        }
+    }
+
+    /// <summary>
+    /// 次のテキストに移行可能かを取得
+    /// </summary>
+    private void SceneCheck()
+    {
+        // 次のテキストに移行可能かを取得（introductionManager , clearManager , gameOverManager のいずれかが存在するかで分岐）
+        if (introductionManager != null)
+        {
+            isNextSentence = introductionManager.IsNextPossible();
+        }
+        else if (clearManager != null)
+        {
+            isNextSentence = clearManager.IsNextPossible();
+        }
+        else if (gameOverManager != null)
+        {
+            isNextSentence = gameOverManager.IsNextPossible();
+        }
+        else
+        {
+            isNextSentence = false;  // いずれも存在しない場合は false
+        }
     }
 }

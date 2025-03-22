@@ -1251,7 +1251,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -388}
-  m_SizeDelta: {x: 1000, y: 500}
+  m_SizeDelta: {x: 1100, y: 500}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1679403074
 MonoBehaviour:
@@ -1365,6 +1365,8 @@ MonoBehaviour:
   blinkColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   blinkInterval: 1
   introductionManager: {fileID: 1679403076}
+  clearManager: {fileID: 0}
+  gameOverManager: {fileID: 0}
 --- !u!1 &1700144416
 GameObject:
   m_ObjectHideFlags: 0

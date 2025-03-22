@@ -11,25 +11,19 @@ public class TitleUIControl : MonoBehaviour
 {
     void Update()
     {
-        // マウスまたはキーボード入力を検知
-        if (Mouse.current?.leftButton.wasPressedThisFrame == true || Keyboard.current?.enterKey.wasPressedThisFrame == true)
-        {
-            LoadGameScene();
-        }
 
-        // コントローラー入力を検知
-        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame) // "A"ボタン
-        {
-            LoadGameScene();
-        }
     }
 
     /// <summary>
-    /// ゲームシーンをロードする
+    /// 左クリック/Aボタンでシーン遷移
     /// </summary>
-    private void LoadGameScene()
+    private void OnClick(InputValue value)
     {
-        SceneManager.LoadScene("IntroductionScene");
+        // 左クリック/Aボタンが押されたら
+        if (value.isPressed)
+        {
+            SceneManager.LoadScene("IntroductionScene");
+        }
     }
 
 }

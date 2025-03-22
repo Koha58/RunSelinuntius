@@ -77,7 +77,7 @@ public class IntroductionManager : MonoBehaviour
     /// </summary>
     void Start()
     {
-        //scene1のみ表示させる
+        // scene1のみ表示させる
         scene1.GetComponent<Image>().enabled = true;
         scene2.GetComponent<Image>().enabled = false;
         scene3.GetComponent<Image>().enabled = false;
@@ -91,11 +91,11 @@ public class IntroductionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ユーザーがクリックした際に次のセリフを表示する。
+    /// ユーザーの入力に合わせ次のセリフを表示する。
     /// </summary>
     private void OnClick(InputValue value)
     {
-        // マウスボタンが押されたかつ、文字入力中でない場合に次のセリフを表示
+        // 左クリック/Aボタンが押されたかつ、文字入力中でない場合に次のセリフを表示
         if (value.isPressed && !isTyping)
         {
             NextLine();
