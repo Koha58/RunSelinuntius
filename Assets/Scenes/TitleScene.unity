@@ -2412,9 +2412,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1856582402}
     - target: {fileID: 4622690073852442137, guid: 8c61c6310f596d84984ee80667140b0d, type: 3}
+      propertyPath: buttonAui
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4622690073852442137, guid: 8c61c6310f596d84984ee80667140b0d, type: 3}
       propertyPath: buttonBui
       value: 
       objectReference: {fileID: 1706934820}
+    - target: {fileID: 4622690073852442137, guid: 8c61c6310f596d84984ee80667140b0d, type: 3}
+      propertyPath: quitGameui
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 4622690073852442137, guid: 8c61c6310f596d84984ee80667140b0d, type: 3}
       propertyPath: SettingMenu
       value: 
