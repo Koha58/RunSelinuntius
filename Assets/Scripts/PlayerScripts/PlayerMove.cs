@@ -14,7 +14,7 @@ public class PlayerMove : MonoBehaviour
     private const float DefaultJumpForce = 7f;     // ジャンプ力
     private const float DefaultGroundCheckRadius = 0.1f; // 地面チェックの半径
     private const float DefaultJumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
-    private const float DefaultSlowMotionScale = 0.5f; // スローモーション時の速度倍率
+    private const float DefaultSlowMotionScale = 0.01f; // スローモーション時の速度倍率
     private const float DefaultNormalTimeScale = 1f; // 通常時の速度倍率
     private const float DefaultFixedDeltaTime = 0.02f; // デフォルトの FixedDeltaTime
     private const float TargetSpeedMultiplier = 5f; // Targetの速度を変更する倍率
@@ -46,6 +46,7 @@ public class PlayerMove : MonoBehaviour
     private bool isGrounded;                          // 地面にいるかどうか
 
     private bool isNearTarget = false; // FinalAttack可能範囲内にいるか
+    private bool isFinalAttackSEPlayed = false; // FinalAttackのSEが再生されたかどうかを管理
 
     /// <summary>
     /// コンポーネントの初期化
@@ -119,11 +120,19 @@ public class PlayerMove : MonoBehaviour
         // FinalAttack範囲内かつ、ボタンが押された場合のみ攻撃を実行
         if (isNearTarget && value.isPressed)
         {
-            // 攻撃処理を実行
+            // すでにSEが再生されていたら処理をスキップ
+            if (isFinalAttackSEPlayed)
+            {
+                return;
+            }
+
             Debug.Log("Final Attack!");
 
             // SE を鳴らし、その長さを取得
             float seDuration = seControl != null ? seControl.PlayFinalAttackSE() : 0f;
+
+            // SEが再生されたことを記録
+            isFinalAttackSEPlayed = true;
 
             // SE が鳴り終わるまで待ってからシーン遷移
             StartCoroutine(WaitAndLoadScene(seDuration));
@@ -212,14 +221,8 @@ public class PlayerMove : MonoBehaviour
             isNearTarget = true;
             SetSlowMotion(true);
         }
-    }
 
-    /// <summary>
-    /// Target から離れたら元の速度に戻す
-    /// </summary>
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Target"))
+        if (other.CompareTag("RunAway"))
         {
             isNearTarget = false;
             SetSlowMotion(false);
@@ -237,6 +240,31 @@ public class PlayerMove : MonoBehaviour
                 targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
             }
         }
+    }
+
+    /// <summary>
+    /// Target から離れたら元の速度に戻す
+    /// </summary>
+    private void OnTriggerExit(Collider other)
+    {
+        //if (other.CompareTag("Target"))
+        //{
+        //    isNearTarget = false;
+        //    SetSlowMotion(false);
+
+        //    // runAway の SE を鳴らす
+        //    if (seControl != null)
+        //    {
+        //        seControl.PlayrunAwaySE();
+        //    }
+
+        //    // Targetの速度を変更
+        //    TargetMove targetMove = other.GetComponent<TargetMove>();
+        //    if (targetMove != null)
+        //    {
+        //        targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
+        //    }
+        //}
     }
 
     /// <summary>
