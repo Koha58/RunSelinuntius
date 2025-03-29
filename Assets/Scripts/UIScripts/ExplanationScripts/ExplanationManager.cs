@@ -14,10 +14,10 @@ public class ExplanationManager : MonoBehaviour
     [SerializeField] private GameObject[] gamepadUIs;  // コントローラー用UI
     [SerializeField] private Image leftCursor; // 左カーソル
     [SerializeField] private Image rightCursor; // 右カーソル
-    [SerializeField] private Image buttonAui; // Aボタン
-    [SerializeField] private Image buttonBui; // Bボタン
-    [SerializeField] private Image closeButtonui; // クローズボタン
-    [SerializeField] private Image closeYui; // コントローラーのYボタン
+    [SerializeField] private Image buttonAUI; // Aボタン
+    [SerializeField] private Image buttonBUI; // Bボタン
+    [SerializeField] private Image closeButtonUI; // クローズボタン
+    [SerializeField] private Image closeYUI; // コントローラーのYボタン
 
     private GameObject[] activeUIs; // 現在表示されているUI
     private int currentIndex = 0; // 現在選択されているUIのインデックス
@@ -30,7 +30,9 @@ public class ExplanationManager : MonoBehaviour
     private const int LAST_UI_INDEX_OFFSET = 1; // 最後のUIのインデックス計算のためのオフセット
 
     private float lastInputTime = 0f; // 最後に入力を受け付けた時間
-    private const float INPUT_DELAY = 0.5f; // 連続入力を防ぐための遅延時間（0.5秒）
+    private float inputDelay = 0.5f; // 連続入力を防ぐための遅延時間
+    private const float KEYBOARD_INPUT_DELAY = 10.0f;// キーボード用：連続入力を防ぐための遅延時間
+    private const float GAMEPAD_INPUT_DELAY = 0.5f;// ゲームパッド用：連続入力を防ぐための遅延時間
 
     // Startメソッドはシーン開始時に呼ばれる
     private void Start()
@@ -46,12 +48,12 @@ public class ExplanationManager : MonoBehaviour
         DisableAllUI();
 
         // 初期状態で非表示のボタンを設定
-        closeButtonui.enabled = false;
-        closeYui.enabled = false;
+        closeButtonUI.enabled = false;
+        closeYUI.enabled = false;
 
         // ゲームパッドが使用されている場合のみボタンUIを表示
-        buttonAui.gameObject.SetActive(isUsingGamepad);
-        buttonBui.gameObject.SetActive(isUsingGamepad);
+        buttonAUI.gameObject.SetActive(isUsingGamepad);
+        buttonBUI.gameObject.SetActive(isUsingGamepad);
 
         // ゲームをポーズ状態にする
         Time.timeScale = 0;
@@ -84,9 +86,9 @@ public class ExplanationManager : MonoBehaviour
             // ポーズ解除時の処理
             Time.timeScale = 1; // ゲームを再開
             isPaused = false; // ポーズを解除
-            closeButtonui.enabled = false; // クローズボタン非表示
-            closeYui.enabled = false; // コントローラーのYボタン非表示
-            buttonAui.enabled = false; // Aボタン非表示
+            closeButtonUI.enabled = false; // クローズボタン非表示
+            closeYUI.enabled = false; // コントローラーのYボタン非表示
+            buttonAUI.enabled = false; // Aボタン非表示
 
             // UI用の入力を無効化し、プレイヤー操作用の入力を有効化
             uiInput.enabled = false; // UI用入力無効
@@ -112,15 +114,15 @@ public class ExplanationManager : MonoBehaviour
         rightCursor.enabled = currentIndex < activeUIs.Length - LAST_UI_INDEX_OFFSET && currentIndex != -1; // 右カーソルは最後のUIより前に表示
 
         // ゲームパッド使用時にのみAボタン、Bボタンを表示
-        buttonAui.gameObject.SetActive(isUsingGamepad && currentIndex < activeUIs.Length - LAST_UI_INDEX_OFFSET);
-        buttonBui.gameObject.SetActive(isUsingGamepad && currentIndex > FIRST_UI_INDEX);
+        buttonAUI.gameObject.SetActive(isUsingGamepad && currentIndex < activeUIs.Length - LAST_UI_INDEX_OFFSET);
+        buttonBUI.gameObject.SetActive(isUsingGamepad && currentIndex > FIRST_UI_INDEX);
 
         // 最後のUIであればクローズボタンを表示
         bool isLastUI = currentIndex == activeUIs.Length - LAST_UI_INDEX_OFFSET;
-        closeButtonui.enabled = isLastUI;
-        closeYui.enabled = isLastUI && isUsingGamepad;
+        closeButtonUI.enabled = isLastUI;
+        closeYUI.enabled = isLastUI && isUsingGamepad;
 
-        Debug.Log($"Current Index: {currentIndex}, IsUsingGamepad: {isUsingGamepad}, Close UI Active: {closeButtonui.enabled}");
+        Debug.Log($"Current Index: {currentIndex}, IsUsingGamepad: {isUsingGamepad}, Close UI Active: {closeButtonUI.enabled}");
     }
 
     // すべてのUIを非表示にするメソッド
@@ -133,8 +135,19 @@ public class ExplanationManager : MonoBehaviour
     // クリック入力の処理（次のUIに進む）
     private void OnClick(InputValue value)
     {
+        bool isUsingGamepad = IsUsingGamepad(); // 現在ゲームパッドを使用中か確認
+
+        if (!isUsingGamepad)
+        {
+            inputDelay = KEYBOARD_INPUT_DELAY;
+        }
+        else
+        {
+            inputDelay = GAMEPAD_INPUT_DELAY;
+        }
+
         // 連続入力を防ぐため、一定時間（INPUT_DELAY）経過していない場合は処理しない
-        if (Time.unscaledTime - lastInputTime < INPUT_DELAY) return;
+        if (Time.unscaledTime - lastInputTime < inputDelay) return;
 
         bool isPressed = value.isPressed; // 入力が押されたかどうかを取得
         if (isPressed && isPaused && !settingManager.IsSettingActive) // ボタンが押され、かつUIが表示中の場合のみ処理
@@ -147,8 +160,19 @@ public class ExplanationManager : MonoBehaviour
     // 戻る入力の処理（前のUIに戻る）
     private void OnBack(InputValue value)
     {
+        bool isUsingGamepad = IsUsingGamepad(); // 現在ゲームパッドを使用中か確認
+
+        if (!isUsingGamepad)
+        {
+            inputDelay = KEYBOARD_INPUT_DELAY;
+        }
+        else
+        {
+            inputDelay = GAMEPAD_INPUT_DELAY;
+        }
+
         // 連続入力を防ぐため、一定時間（INPUT_DELAY）経過していない場合は処理しない
-        if (Time.unscaledTime - lastInputTime < INPUT_DELAY) return;
+        if (Time.unscaledTime - lastInputTime < inputDelay) return;
 
         bool isPressed = value.isPressed; // 入力が押されたかどうかを取得
         if (isPressed && isPaused) // ボタンが押され、かつUIが表示中の場合のみ処理
@@ -164,7 +188,7 @@ public class ExplanationManager : MonoBehaviour
         bool isPressed = value.isPressed;
 
         // クローズボタンが押され、クローズボタンUIが表示されており、現在のUIが最後であれば
-        if (isPressed && closeButtonui.enabled && isPaused && currentIndex == activeUIs.Length - LAST_UI_INDEX_OFFSET)
+        if (isPressed && closeButtonUI.enabled && isPaused && currentIndex == activeUIs.Length - LAST_UI_INDEX_OFFSET)
         {
             Close(); // UIを閉じる
         }

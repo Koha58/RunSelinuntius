@@ -4,6 +4,7 @@ using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 設定メニューの管理クラス
@@ -221,6 +222,14 @@ public class SettingManager : MonoBehaviour
     private void OnBack(InputValue value)
     {
         Close();
+    }
+
+    /// <summary>
+    /// 設定メニューを閉じる
+    /// </summary>
+    public void Quit()
+    {
+        SceneManager.LoadScene("TitleScene");
     }
 
     // 音声パラメータ名を定義するクラス

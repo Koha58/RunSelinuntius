@@ -48,11 +48,18 @@ public class PlayerMove : MonoBehaviour
     private bool isNearTarget = false; // FinalAttack可能範囲内にいるか
     private bool isFinalAttackSEPlayed = false; // FinalAttackのSEが再生されたかどうかを管理
 
+    private const int TargetFPS = 60;  // フレームレートの目標値
+    private const int VSyncDisabled = 0; // VSync を無効にする値
+
     /// <summary>
     /// コンポーネントの初期化
     /// </summary>
     private void Awake()
     {
+        // フレームレートとVSyncの設定
+        QualitySettings.vSyncCount = VSyncDisabled;
+        Application.targetFrameRate = TargetFPS;
+
         // Rigidbodyコンポーネントを取得
         playerRigidbody = GetComponent<Rigidbody>();
 
@@ -134,8 +141,39 @@ public class PlayerMove : MonoBehaviour
             // SEが再生されたことを記録
             isFinalAttackSEPlayed = true;
 
+            // プレイヤーの動きを止める
+            StopPlayerMovement();
+
+            // ターゲットの動きを止める
+            StopTargetMovement();
+
             // SE が鳴り終わるまで待ってからシーン遷移
             StartCoroutine(WaitAndLoadScene(seDuration));
+        }
+    }
+
+    /// <summary>
+    /// プレイヤーの動きを止める
+    /// </summary>
+    private void StopPlayerMovement()
+    {
+        speedMultiplier = 0f;
+        playerRigidbody.velocity = Vector3.zero; // 物理的な動きを止める
+    }
+
+    /// <summary>
+    /// シーン内のすべての Target の動きを止める
+    /// </summary>
+    private void StopTargetMovement()
+    {
+        GameObject[] targets = GameObject.FindGameObjectsWithTag("Target");
+        foreach (GameObject target in targets)
+        {
+            TargetMove targetMove = target.GetComponent<TargetMove>();
+            if (targetMove != null)
+            {
+                targetMove.SetSpeedMultiplier(0f); // ターゲットの移動速度を0にする
+            }
         }
     }
 
@@ -216,6 +254,8 @@ public class PlayerMove : MonoBehaviour
     /// </summary>
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"OnTriggerEnter: {other.gameObject.name}");
+
         if (other.CompareTag("Target"))
         {
             isNearTarget = true;
@@ -233,38 +273,17 @@ public class PlayerMove : MonoBehaviour
                 seControl.PlayrunAwaySE();
             }
 
-            // Targetの速度を変更
-            TargetMove targetMove = other.GetComponent<TargetMove>();
-            if (targetMove != null)
+            // シーン内のすべての "Target" タグがついたオブジェクトを取得し、それらの速度を変更
+            GameObject[] targets = GameObject.FindGameObjectsWithTag("Target");
+            foreach (GameObject target in targets)
             {
-                targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
+                TargetMove targetMove = target.GetComponent<TargetMove>();
+                if (targetMove != null)
+                {
+                    targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
+                }
             }
         }
-    }
-
-    /// <summary>
-    /// Target から離れたら元の速度に戻す
-    /// </summary>
-    private void OnTriggerExit(Collider other)
-    {
-        //if (other.CompareTag("Target"))
-        //{
-        //    isNearTarget = false;
-        //    SetSlowMotion(false);
-
-        //    // runAway の SE を鳴らす
-        //    if (seControl != null)
-        //    {
-        //        seControl.PlayrunAwaySE();
-        //    }
-
-        //    // Targetの速度を変更
-        //    TargetMove targetMove = other.GetComponent<TargetMove>();
-        //    if (targetMove != null)
-        //    {
-        //        targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
-        //    }
-        //}
     }
 
     /// <summary>
