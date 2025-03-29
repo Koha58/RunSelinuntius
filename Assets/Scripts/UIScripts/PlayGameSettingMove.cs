@@ -11,6 +11,7 @@ public class PlayGameSettingMove : MonoBehaviour
 {
     [SerializeField] private SettingManager settingManager; // SettingManagerへの参照
     [SerializeField] private ExplanationManager explanationManager; // ExplanationManagerへの参照
+    [SerializeField] private PlayerMove playerMove; // SettingManagerへの参照
     [SerializeField] private Image keyboardPauseUI; // キーボード用ポーズUI
     [SerializeField] private Image controllerPauseUI; // コントローラー用ポーズUI
 
@@ -37,7 +38,7 @@ public class PlayGameSettingMove : MonoBehaviour
         }
 
         // 設定メニューが表示されていない、かつ説明のカーソルが非表示の場合のみゲームを再開
-        if (!settingManager.IsSettingActive && (!explanationManager.IsLeftCursorVisible && !explanationManager.IsRightCursorVisible))
+        if (!settingManager.IsSettingActive && !playerMove.IsSlowMotionEnabled() && (!explanationManager.IsLeftCursorVisible && !explanationManager.IsRightCursorVisible))
         {
             Time.timeScale = 1; // ゲームを再生（ポーズ解除）
 

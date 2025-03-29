@@ -26,6 +26,7 @@ public class TitleUIControl : MonoBehaviour
     private int currentIndex = 0;     // 現在の選択位置
     private bool canMove = true;      // 入力受付可否フラグ
     private bool stickNeutral = true; // スティックがニュートラル状態かどうか
+    private float timeScale = 1f;  // 時間スケールの設定変数
 
     #endregion
 
@@ -52,6 +53,8 @@ public class TitleUIControl : MonoBehaviour
     /// </summary>
     void Start()
     {
+        Time.timeScale = timeScale;
+
         // メニューのリストを作成
         menuOptions = new List<Image> { startUI, settingUI, quitUI };
 

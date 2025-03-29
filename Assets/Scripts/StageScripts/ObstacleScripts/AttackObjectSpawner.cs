@@ -13,8 +13,8 @@ public class AttackObjectSpawner : MonoBehaviour
 
     [Header("生成間隔設定")]
     [SerializeField] private float baseSpawnInterval = 2.0f; // 基本のオブジェクト生成間隔（秒）
-    [SerializeField] private float maxSpawnMultiplier = 2.0f; // HP最大時の生成間隔倍率
-    [SerializeField] private float minSpawnMultiplier = 0.2f; // HP最小時の生成間隔倍率
+    [SerializeField] private float maxSpawnMultiplier = 1.0f; // HP最大時の生成間隔倍率
+    [SerializeField] private float minSpawnMultiplier = 0.5f; // HP最小時の生成間隔倍率
 
     [Header("生成位置設定")]
     [SerializeField] private float distanceFromPlayer = 20.0f; // PrefabのデフォルトZ座標オフセット

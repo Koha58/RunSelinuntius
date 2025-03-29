@@ -14,6 +14,17 @@ public class PlayerStatus : MonoBehaviour
     [SerializeField] private float recoveryRate = 0.5f; // 毎秒のHP回復速度
     private float recoveryBuffer = 0f;       // 小数点以下の回復量を保持するバッファ
 
+    [Header("サウンド設定")]
+    [SerializeField] private AudioClip damageSound; // ダメージ音
+    private AudioSource audioSource;               // AudioSourceコンポーネント
+
+    [Header("プレイヤー点滅設定")]
+    [SerializeField] private Renderer playerRenderer; // プレイヤーのRenderer
+    [SerializeField] private float flashDuration = 0.1f; // 点滅の間隔
+    [SerializeField] private int flashCount = 5;         // 点滅の回数
+
+    private bool isFlashing = false;  // 点滅中かどうかを示すフラグ
+
     // HPの最大値と現在値を公開するプロパティ
     public int MaxHP => maxHP;
     public int CurrentHP => currentHP;
@@ -33,6 +44,9 @@ public class PlayerStatus : MonoBehaviour
 
         // HPの初期状態を通知
         HealthChanged?.Invoke(currentHP, maxHP);
+
+        // AudioSourceコンポーネントを取得
+        audioSource = GetComponent<AudioSource>();
     }
 
     /// <summary>
@@ -81,9 +95,30 @@ public class PlayerStatus : MonoBehaviour
     /// <param name="damage">受けるダメージ量</param>
     public void TakeDamage(int damage)
     {
+
+        // 点滅中の場合、ダメージ処理をスキップ
+        if (isFlashing)
+        {
+            return;
+        }
+
         // HPを減少させ、0未満にならないよう制限
         currentHP -= damage;
         currentHP = Mathf.Clamp(currentHP, 0, maxHP);
+
+        // サウンド再生
+        if (audioSource != null && damageSound != null)
+        {
+            Debug.Log("Playing damage sound");  // サウンドが再生されるタイミングを確認するためのログ
+            audioSource.PlayOneShot(damageSound);
+        }
+        else
+        {
+            Debug.LogWarning("AudioSource or damageSound is null!");
+        }
+
+        // プレイヤーの点滅処理
+        StartCoroutine(FlashPlayer());
 
         // HP変化を通知
         HealthChanged?.Invoke(currentHP, maxHP);
@@ -93,6 +128,24 @@ public class PlayerStatus : MonoBehaviour
         {
             Die();
         }
+    }
+
+    private IEnumerator FlashPlayer()
+    {
+        isFlashing = true; // 点滅中フラグを立てる
+
+        for (int i = 0; i < flashCount; i++)
+        {
+            if (playerRenderer != null)
+            {
+                playerRenderer.enabled = false; // プレイヤーを非表示
+                yield return new WaitForSeconds(flashDuration);
+                playerRenderer.enabled = true;  // プレイヤーを表示
+                yield return new WaitForSeconds(flashDuration);
+            }
+        }
+
+        isFlashing = false; // 点滅終了後、フラグを戻す
     }
 
     /// <summary>

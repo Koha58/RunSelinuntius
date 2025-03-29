@@ -79,6 +79,9 @@ public class GameOverManager : MonoBehaviour
     /// </summary>
     private void OnClick(InputValue value)
     {
+        // 現在の入力デバイスを判定（true: コントローラー, false: キーボード）
+        bool isUsingGamepad = InputDeviceManager.Instance.IsUsingGamepad();
+
         // 左クリック/Aボタンが押されたかつ、文字入力中でない場合に次のセリフを表示
         if (value.isPressed && !isTyping)
         {
@@ -86,7 +89,7 @@ public class GameOverManager : MonoBehaviour
         }
 
         // 選択肢の表示中（「リトライしますか？」の部分が表示された場合）
-        if (dialogueText.text == "リトライしますか？\n")
+        if (dialogueText.text == "リトライしますか？\n" && isUsingGamepad)
         {
             SceneManager.LoadScene("GameScene");
         }

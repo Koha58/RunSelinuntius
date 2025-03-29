@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.SocialPlatforms;
 
 /// <summary>
 /// ストーリークリア部分のテキストを管理するクラス
@@ -46,12 +47,14 @@ public class ClearManager : MonoBehaviour
     private int currentLineIndex = 0; // 現在表示しているセリフのインデックス
     private bool isTyping = false; // 現在文字を表示しているかどうかのフラグ
     private bool isNext = false; // テキストごとの表示の終了フラグ
+    private float timeScale = 1f;  // 時間スケールの設定変数
 
     /// <summary>
     /// 最初のセリフを表示開始する。
     /// </summary>
     void Start()
     {
+        Time.timeScale = timeScale;
         // scene1のみ表示させる
         scene1.GetComponent<Image>().enabled = true;
         scene2.GetComponent<Image>().enabled = false;

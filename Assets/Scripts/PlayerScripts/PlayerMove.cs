@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// プレイヤーの動きを制御するクラス
+/// Playerの動きを管理するクラス
 /// </summary>
 public class PlayerMove : MonoBehaviour
 {
@@ -14,10 +14,18 @@ public class PlayerMove : MonoBehaviour
     private const float DefaultJumpForce = 7f;     // ジャンプ力
     private const float DefaultGroundCheckRadius = 0.1f; // 地面チェックの半径
     private const float DefaultJumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
-    private const float DefaultSlowMotionScale = 0.01f; // スローモーション時の速度倍率
     private const float DefaultNormalTimeScale = 1f; // 通常時の速度倍率
-    private const float DefaultFixedDeltaTime = 0.02f; // デフォルトの FixedDeltaTime
+    private const float DefaultFixedDeltaTime = 0.0167f; // デフォルトの FixedDeltaTime
     private const float TargetSpeedMultiplier = 5f; // Targetの速度を変更する倍率
+    private const float MinFixedDeltaTime = 0.002f; // 最低固定フレームレート
+    private const float MinSpeedMultiplier = 0.5f; // 最終的なプレイヤーの速度倍率
+    private const float SpeedMultiplierLerpFactor = 0.1f; // スムージング係数
+    private const float ZeroSpeedMultiplier = 0f; // 速度倍率をゼロにする値
+    private const float DefaultHorizontalVelocity = 0f; // 横方向の初期速度（0）
+
+    private const string GameClearSceneName = "GameClearScene";  // ゲームクリアシーンの名前
+    private const float ZeroTimeScale = 0f; // ゲームを完全に停止する時の TimeScale
+    private const float SlowMotionSpeedMultiplier = 0.1f; // スローモーション時の倍率
 
     [Header("移動設定")]
     [SerializeField] private Animator animator;        // プレイヤーのアニメーター
@@ -32,11 +40,6 @@ public class PlayerMove : MonoBehaviour
     [Header("アニメーション設定")]
     [SerializeField] private float jumpAnimationDuration = DefaultJumpAnimationDuration; // ジャンプアニメーション終了までの遅延時間
 
-    [Header("時間操作設定")]
-    [SerializeField] private float slowMotionScale = DefaultSlowMotionScale; // スローモーション時の速度倍率
-    [SerializeField] private float normalTimeScale = DefaultNormalTimeScale; // 通常時の速度倍率
-    [SerializeField] private float defaultFixedDeltaTime = DefaultFixedDeltaTime; // デフォルトの FixedDeltaTime
-
     [Header("FinalAttackSE設定")]
     [SerializeField] private FinalAttackSEControl seControl; // FinalAttack の SE 制御
 
@@ -50,6 +53,10 @@ public class PlayerMove : MonoBehaviour
 
     private const int TargetFPS = 60;  // フレームレートの目標値
     private const int VSyncDisabled = 0; // VSync を無効にする値
+
+    private GameObject[] targets;　// Targetオブジェクトの配列。ゲーム内でターゲットとなるオブジェクトを格納
+    private bool setSlowMotion;　  // スローモーションの設定を保持するフラグ。スローモーションが有効かどうかを制御
+    private bool isFinalAttackTriggered = false; // FinalAttackが発生したかどうか
 
     /// <summary>
     /// コンポーネントの初期化
@@ -74,17 +81,25 @@ public class PlayerMove : MonoBehaviour
     }
 
     /// <summary>
+    /// ターゲットを取得
+    /// </summary>
+    private void Start()
+    {
+        targets = GameObject.FindGameObjectsWithTag("Target");
+    }
+
+    /// <summary>
     /// 移動入力を受け取る
     /// </summary>
-    /// <param name="value">入力値 (Vector2)</param>
     private void OnMove(InputValue value)
     {
         // ジャンプ中は移動を無効化
         if (!isGrounded)
         {
-            horizontalVelocity = 0;
+            horizontalVelocity = DefaultHorizontalVelocity;
             return;
         }
+
         // 左スティックの入力値を取得
         Vector2 axis = value.Get<Vector2>();
 
@@ -95,7 +110,6 @@ public class PlayerMove : MonoBehaviour
     /// <summary>
     /// ジャンプ入力を受け取る
     /// </summary>
-    /// <param name="value">入力値 (isPressed)</param>
     private void OnJump(InputValue value)
     {
         // ジャンプボタンが押されていて、かつ地面にいる場合のみジャンプを実行
@@ -121,7 +135,6 @@ public class PlayerMove : MonoBehaviour
     /// <summary>
     /// 攻撃入力を受け取る
     /// </summary>
-    /// <param name="value">入力値 (isPressed)</param>
     private void OnFinalAttack(InputValue value)
     {
         // FinalAttack範囲内かつ、ボタンが押された場合のみ攻撃を実行
@@ -141,39 +154,12 @@ public class PlayerMove : MonoBehaviour
             // SEが再生されたことを記録
             isFinalAttackSEPlayed = true;
 
-            // プレイヤーの動きを止める
-            StopPlayerMovement();
+            isFinalAttackTriggered = true; // FinalAttack発生フラグをON
 
-            // ターゲットの動きを止める
-            StopTargetMovement();
+            Time.timeScale = DefaultNormalTimeScale;
 
             // SE が鳴り終わるまで待ってからシーン遷移
             StartCoroutine(WaitAndLoadScene(seDuration));
-        }
-    }
-
-    /// <summary>
-    /// プレイヤーの動きを止める
-    /// </summary>
-    private void StopPlayerMovement()
-    {
-        speedMultiplier = 0f;
-        playerRigidbody.velocity = Vector3.zero; // 物理的な動きを止める
-    }
-
-    /// <summary>
-    /// シーン内のすべての Target の動きを止める
-    /// </summary>
-    private void StopTargetMovement()
-    {
-        GameObject[] targets = GameObject.FindGameObjectsWithTag("Target");
-        foreach (GameObject target in targets)
-        {
-            TargetMove targetMove = target.GetComponent<TargetMove>();
-            if (targetMove != null)
-            {
-                targetMove.SetSpeedMultiplier(0f); // ターゲットの移動速度を0にする
-            }
         }
     }
 
@@ -186,6 +172,9 @@ public class PlayerMove : MonoBehaviour
         // 横方向と前方向に移動
         Vector3 movement = new Vector3(horizontalVelocity * moveSpeed * speedMultiplier, 0, forwardSpeed * speedMultiplier) * Time.deltaTime;
         transform.position += movement;
+
+        // デバッグ表示: 現在の Time.timeScale を表示
+        Debug.Log("Current TimeScale: " + Time.timeScale);
     }
 
     /// <summary>
@@ -199,18 +188,8 @@ public class PlayerMove : MonoBehaviour
     }
 
     /// <summary>
-    /// 地面チェック用の可視化処理
-    /// </summary>
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, groundCheckRadius);
-    }
-
-    /// <summary>
     /// 一定時間後にジャンプアニメーションを終了し、地面にいる状態に戻す
     /// </summary>
-    /// <param name="delay">遅延時間 (秒)</param>
     private IEnumerator SetJumpFalseAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -262,7 +241,7 @@ public class PlayerMove : MonoBehaviour
             SetSlowMotion(true);
         }
 
-        if (other.CompareTag("RunAway"))
+        if (other.CompareTag("RunAway") && !isFinalAttackTriggered)
         {
             isNearTarget = false;
             SetSlowMotion(false);
@@ -273,14 +252,12 @@ public class PlayerMove : MonoBehaviour
                 seControl.PlayrunAwaySE();
             }
 
-            // シーン内のすべての "Target" タグがついたオブジェクトを取得し、それらの速度を変更
-            GameObject[] targets = GameObject.FindGameObjectsWithTag("Target");
             foreach (GameObject target in targets)
             {
                 TargetMove targetMove = target.GetComponent<TargetMove>();
                 if (targetMove != null)
                 {
-                    targetMove.SetSpeedMultiplier(TargetSpeedMultiplier); // 速度を変更
+                    targetMove.SetSpeedMultiplier(TargetSpeedMultiplier);
                 }
             }
         }
@@ -289,33 +266,79 @@ public class PlayerMove : MonoBehaviour
     /// <summary>
     /// シーン全体のスローモーションを設定する
     /// </summary>
-    /// <param name="isSlow">trueなら遅く、falseなら通常速度</param>
     private void SetSlowMotion(bool isSlow)
     {
+        setSlowMotion = isSlow;
+
         if (isSlow)
         {
-            Time.timeScale = slowMotionScale;
-            Time.fixedDeltaTime = defaultFixedDeltaTime * slowMotionScale;
-            speedMultiplier = slowMotionScale;
+            // Time.timeScale を更に小さくして時間全体を遅くする
+            Time.timeScale = SlowMotionSpeedMultiplier; // ここで時間の流れを遅くする
+            Time.fixedDeltaTime = Mathf.Max(DefaultFixedDeltaTime * Time.timeScale, MinFixedDeltaTime); // 固定フレームレートの調整
+
+            // speedMultiplier をさらに低く設定して、プレイヤーの動きを遅くする
+            speedMultiplier = Mathf.Lerp(speedMultiplier, MinSpeedMultiplier, SpeedMultiplierLerpFactor); // より遅くなるように調整
         }
         else
         {
-            Time.timeScale = normalTimeScale;
-            Time.fixedDeltaTime = defaultFixedDeltaTime;
-            speedMultiplier = normalTimeScale;
+            // 通常速度に戻す
+            Time.timeScale = DefaultNormalTimeScale;
+            Time.fixedDeltaTime = DefaultFixedDeltaTime;
+            speedMultiplier = DefaultNormalTimeScale;
         }
+    }
+
+    /// <summary>
+    /// スローモーションが有効かどうかを確認する
+    /// </summary>
+    /// <returns>
+    /// スローモーションが有効であれば true、それ以外は false を返す
+    /// </returns>
+    public bool IsSlowMotionEnabled()
+    {
+        return setSlowMotion;
     }
 
     /// <summary>
     /// 指定された時間待機した後、指定のシーンに遷移するコルーチン
     /// </summary>
-    /// <param name="waitTime">シーン遷移前に待機する時間（秒）</param>
     private IEnumerator WaitAndLoadScene(float waitTime)
     {
-        // 指定された時間だけ待機（FinalAttack の SE の長さを想定）
-        yield return new WaitForSeconds(waitTime);
+        // ゲーム全体を停止（物理計算やUpdate処理も含める）
+        Time.timeScale = ZeroTimeScale;
 
-        // SE の再生が完了した後に、GameClearScene へ遷移
-        SceneManager.LoadScene("GameClearScene");
+        // プレイヤーとターゲットの動きを完全に止める
+        StopPlayerMovement();
+        StopTargetMovement();
+
+        // SE の再生時間をリアルタイムで待つ（UnscaledTime を使用）
+        yield return new WaitForSecondsRealtime(waitTime);
+
+        // シーン遷移（Time.timeScale を戻さずに遷移する）
+        SceneManager.LoadScene(GameClearSceneName);
+    }
+
+    /// <summary>
+    /// プレイヤーの動きを止める
+    /// </summary>
+    private void StopPlayerMovement()
+    {
+        speedMultiplier = ZeroSpeedMultiplier;
+        playerRigidbody.velocity = Vector3.zero; // 物理的な動きを止める
+    }
+
+    /// <summary>
+    /// シーン内のすべての Target の動きを止める
+    /// </summary>
+    private void StopTargetMovement()
+    {
+        foreach (GameObject target in targets)
+        {
+            TargetMove targetMove = target.GetComponent<TargetMove>();
+            if (targetMove != null)
+            {
+                targetMove.SetSpeedMultiplier(ZeroSpeedMultiplier);
+            }
+        }
     }
 }
