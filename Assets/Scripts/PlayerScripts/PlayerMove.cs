@@ -172,9 +172,6 @@ public class PlayerMove : MonoBehaviour
         // 横方向と前方向に移動
         Vector3 movement = new Vector3(horizontalVelocity * moveSpeed * speedMultiplier, 0, forwardSpeed * speedMultiplier) * Time.deltaTime;
         transform.position += movement;
-
-        // デバッグ表示: 現在の Time.timeScale を表示
-        Debug.Log("Current TimeScale: " + Time.timeScale);
     }
 
     /// <summary>

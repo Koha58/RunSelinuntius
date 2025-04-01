@@ -99,8 +99,20 @@ public class SettingManager : MonoBehaviour
 
     private void Update()
     {
+        PlayerInput playerInput = GetComponent<PlayerInput>();
+
+        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
+        {
+            Debug.Log("Gamepad B (Back) button detected!");
+        }
         // 設定メニューが表示されている場合のみ処理を行う
         if (!IsSettingActive) return;
+
+        // 現在のシーンがGameSceneの場合、canMoveをtrueに設定
+        if (SceneManager.GetActiveScene().name == "GameScene")
+        {
+            canMove = true;
+        }
 
         // ゲームパッドが使用されている場合、入力を処理
         if (Gamepad.current != null)
@@ -219,9 +231,18 @@ public class SettingManager : MonoBehaviour
     /// バックボタンが押されたときの処理
     /// </summary>
     /// <param name="value">バックボタンの入力値</param>
-    private void OnBack(InputValue value)
+    public void OnBack(InputValue value)
     {
-        Close();
+        Debug.Log("OnBack Called! Scene: " + SceneManager.GetActiveScene().name);
+
+        if (value == null)
+        {
+            Debug.LogError("OnBack: InputValue is NULL!");
+        }
+        else
+        {
+            Debug.Log("OnBack: Value is " + value.isPressed);
+        }
     }
 
     /// <summary>

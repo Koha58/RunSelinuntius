@@ -34,6 +34,11 @@ public class ExplanationManager : MonoBehaviour
     private const float KEYBOARD_INPUT_DELAY = 10.0f;// キーボード用：連続入力を防ぐための遅延時間
     private const float GAMEPAD_INPUT_DELAY = 0.5f;// ゲームパッド用：連続入力を防ぐための遅延時間
 
+
+    // 他のスクリプトからカーソルの表示状態を取得するためのプロパティ
+    public bool IsLeftCursorVisible => leftCursor.enabled;
+    public bool IsRightCursorVisible => rightCursor.enabled;
+
     // Startメソッドはシーン開始時に呼ばれる
     private void Start()
     {
@@ -133,7 +138,7 @@ public class ExplanationManager : MonoBehaviour
     }
 
     // クリック入力の処理（次のUIに進む）
-    private void OnClick(InputValue value)
+    private void OnNext(InputValue value)
     {
         bool isUsingGamepad = IsUsingGamepad(); // 現在ゲームパッドを使用中か確認
 
@@ -158,7 +163,7 @@ public class ExplanationManager : MonoBehaviour
     }
 
     // 戻る入力の処理（前のUIに戻る）
-    private void OnBack(InputValue value)
+    private void OnReturn(InputValue value)
     {
         bool isUsingGamepad = IsUsingGamepad(); // 現在ゲームパッドを使用中か確認
 
@@ -230,7 +235,4 @@ public class ExplanationManager : MonoBehaviour
         UpdateUI(); // UIを更新
     }
 
-    // 他のスクリプトからカーソルの表示状態を取得するためのプロパティ
-    public bool IsLeftCursorVisible => leftCursor.enabled;
-    public bool IsRightCursorVisible => rightCursor.enabled;
 }

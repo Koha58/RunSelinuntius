@@ -38,7 +38,8 @@ public class PlayGameSettingMove : MonoBehaviour
         }
 
         // 設定メニューが表示されていない、かつ説明のカーソルが非表示の場合のみゲームを再開
-        if (!settingManager.IsSettingActive && !playerMove.IsSlowMotionEnabled() && (!explanationManager.IsLeftCursorVisible && !explanationManager.IsRightCursorVisible))
+        if (!settingManager.IsSettingActive && !playerMove.IsSlowMotionEnabled() 
+            && (!explanationManager.IsLeftCursorVisible && !explanationManager.IsRightCursorVisible))
         {
             Time.timeScale = 1; // ゲームを再生（ポーズ解除）
 
