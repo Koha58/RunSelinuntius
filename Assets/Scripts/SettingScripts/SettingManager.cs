@@ -11,28 +11,39 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class SettingManager : MonoBehaviour
 {
-    [SerializeField] private GameObject SettingMenu; // 設定メニューオブジェクト
-    [SerializeField] private Image buttonBui;       // BボタンのUI
-    [SerializeField] private Image settingCursorUI; // カーソル画像
-    [SerializeField] private Slider BGMSlider;      // BGMスライダー
-    [SerializeField] private Slider SESlider;       // SEスライダー
-    [SerializeField] private AudioMixer audioMixer; // オーディオミキサー
+    // 設定メニュー関連のオブジェクト
+    [SerializeField] private GameObject SettingMenu;  // 設定メニュー全体のオブジェクト
+    [SerializeField] private Image buttonBui;         // BボタンのUI（戻るボタン表示用）
+    [SerializeField] private Image buttonAui;         // AボタンのUI（タイトルへ戻るボタン表示用）
+    [SerializeField] private Image settingCursorUI;   // 設定メニューのカーソル画像
+    [SerializeField] private Slider BGMSlider;        // BGM音量調整用スライダー
+    [SerializeField] private Slider SESlider;         // SE音量調整用スライダー
+    [SerializeField] private AudioMixer audioMixer;   // オーディオミキサー（音量制御）
 
-    private List<Slider> sliders;
-    private int currentIndex = 0;
-    private bool stickNeutral = true;
-    private bool canMove = true;
+    // スライダーの管理
+    private List<Slider> sliders; // 設定メニュー内のスライダー（BGM・SE）を管理するリスト
+    private int currentIndex = 0; // 現在選択中の項目（0: BGM, 1: SE, 2: Aボタン）
+    private int totalOptions;     // 選択可能な項目数（スライダーの数 + AボタンUI）
 
-    // 定数値
-    private const float InputCooldown = 0.1f; // 連続入力のクールダウン時間
-    private const float StickThreshold = 0.5f; // スティックの入力閾値（移動方向を判定するためのしきい値）
-    private const float MinStickNeutralThreshold = 0.1f; // スティックがニュートラルと見なされる閾値
-    private const float VolumeAdjustStep = 0.1f; // 音量変更の基本ステップ
-    private const float VolumeAdjustMultiplierMax = 5f; // スティックの入力強度に応じた最大音量調整倍率
-    private const float CursorOffsetX = -400f; // カーソル位置のX軸オフセット
+    // スティック入力の管理
+    private bool stickNeutral = true; // スティックの入力がニュートラルな状態か（押しっぱなし防止）
+    private bool canMove = true;      // 選択移動が可能か（入力クールダウン管理）
+
+    // カーソル位置管理
+    private Vector3 lastCursorPosition; // 最後に設定されたカーソルの位置
+
+    // 定数（数値設定）
+    private const float InputCooldown = 0.1f;           // 連続入力のクールダウン時間
+    private const float StickThreshold = 0.5f;          // スティックの入力閾値
+    private const float MinStickNeutralThreshold = 0.1f;// スティックがニュートラルと見なされる閾値
+    private const float VolumeAdjustStep = 0.1f;        // 音量変更の基本ステップ
+    private const float VolumeAdjustMultiplierMax = 5f; // スティック入力強度による音量調整倍率
+    private const float CursorOffsetX = -400f;         // カーソル位置のX軸オフセット
+    private const float DefaultVolume = 0f;            // 音量のデフォルト値
 
     // 設定メニューの状態を管理するプロパティ
-    public bool IsSettingActive { get; private set; } // 設定メニューの状態
+    public bool IsSettingActive { get; private set; }  // 設定メニューが開いているか
+
 
     private void Start()
     {
@@ -43,6 +54,14 @@ public class SettingManager : MonoBehaviour
 
         // スライダーをリスト化し、初期化処理を行う
         sliders = new List<Slider> { BGMSlider, SESlider };
+
+        // AボタンUIがある場合、選択肢を追加
+        totalOptions = sliders.Count;
+        if (buttonAui != null)
+        {
+            buttonAui.enabled = false;
+            totalOptions++; // AボタンUIを選択対象に追加
+        }
 
         // オーディオミキサーから音量を取得してスライダーに反映
         InitializeSliders();
@@ -61,18 +80,28 @@ public class SettingManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 指定されたスライダーの音量をオーディオミキサーから取得して適用する
+    /// 指定されたスライダーの音量を PlayerPrefs からロードし、オーディオミキサーに適用する。
     /// </summary>
-    /// <param name="slider">音量を設定するスライダー</param>
-    /// <param name="parameterName">オーディオミキサーで設定されているパラメータ名（"BGM"または"SE"）</param>
+    /// <param name="slider">対象のスライダー</param>
+    /// <param name="parameterName">オーディオミキサーでのパラメータ名（"BGM" または "SE"）</param>
     private void InitializeSlider(Slider slider, string parameterName)
     {
-        // オーディオミキサーから音量の現在値を取得
-        if (audioMixer.GetFloat(parameterName, out float volume))
+        // PlayerPrefs から保存された音量を取得（未設定の場合は DefaultVolume を使用）
+        float defaultValue = PlayerPrefs.GetFloat(parameterName, DefaultVolume);
+
+        // PlayerPrefs から保存されている音量設定を取得
+        if (parameterName == AudioParameterName.BGM)
         {
-            // 取得した音量をスライダーに反映
-            slider.value = volume;
+            defaultValue = PlayerPrefs.GetFloat(AudioParameterName.BGM, DefaultVolume);
         }
+        else if (parameterName == AudioParameterName.SE)
+        {
+            defaultValue = PlayerPrefs.GetFloat(AudioParameterName.SE, DefaultVolume);
+        }
+
+        // スライダーの値を設定し、オーディオミキサーにも反映
+        slider.value = defaultValue;
+        audioMixer.SetFloat(parameterName, defaultValue);
     }
 
     /// <summary>
@@ -99,12 +128,6 @@ public class SettingManager : MonoBehaviour
 
     private void Update()
     {
-        PlayerInput playerInput = GetComponent<PlayerInput>();
-
-        if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame)
-        {
-            Debug.Log("Gamepad B (Back) button detected!");
-        }
         // 設定メニューが表示されている場合のみ処理を行う
         if (!IsSettingActive) return;
 
@@ -112,6 +135,19 @@ public class SettingManager : MonoBehaviour
         if (SceneManager.GetActiveScene().name == "GameScene")
         {
             canMove = true;
+
+            // ゲームパッドが接続されており、B(East)ボタンが押されたら
+            if (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)
+            {
+                // 設定メニューを閉じる
+                Close();
+            }
+            // ゲームパッドが接続されており、AボタンUIが表示され、かつA(South)ボタンが押されたら
+            else if (Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame && buttonAui.enabled == true)
+            {
+                // タイトルシーンに戻る
+                Quit();
+            }
         }
 
         // ゲームパッドが使用されている場合、入力を処理
@@ -165,8 +201,8 @@ public class SettingManager : MonoBehaviour
     /// <param name="direction">選択方向（-1: 上、1: 下）</param>
     private void ChangeSliderSelection(int direction)
     {
-        // 現在選択中のスライダーインデックスを変更
-        currentIndex = (currentIndex + direction + sliders.Count) % sliders.Count;
+        // 選択肢の数に応じてインデックスを循環させる
+        currentIndex = (currentIndex + direction + totalOptions) % totalOptions;
         // カーソルの位置を更新
         UpdateCursorPosition();
         // 移動処理が終わるまで次の移動を受け付けない
@@ -179,32 +215,68 @@ public class SettingManager : MonoBehaviour
     /// </summary>
     private void UpdateCursorPosition()
     {
-        // カーソル位置のオフセットを適用し、現在選択されているスライダーにカーソルを移動
         Vector3 offset = new Vector3(CursorOffsetX, 0f, 0f);
-        settingCursorUI.transform.position = sliders[currentIndex].transform.position + offset;
+
+        if (currentIndex < sliders.Count)
+        {
+            // スライダーを選択している場合
+            // カーソルの位置を現在のスライダーの位置 + オフセットに設定
+            settingCursorUI.transform.position = sliders[currentIndex].transform.position + offset;
+
+            // 記憶していたカーソルのX座標を更新
+            lastCursorPosition = settingCursorUI.transform.position;
+
+            // AボタンUIが存在する場合は非表示にする（スライダー選択時は不要）
+            if (buttonAui != null)
+            {
+                buttonAui.enabled = false;
+            }
+        }
+        else if (buttonAui != null)
+        {
+            // AボタンUIを選択している場合
+            // AボタンUIを有効化（表示）
+            buttonAui.enabled = true;
+
+            // 記憶していたX座標を使用し、AボタンのY座標にカーソルを移動
+            settingCursorUI.transform.position = new Vector3(
+                lastCursorPosition.x,  // X座標は保持（スライダーと揃える）
+                buttonAui.transform.position.y, // Y座標のみAボタンの位置に合わせる
+                lastCursorPosition.z   // Z座標は保持
+            );
+        }
     }
 
     /// <summary>
-    /// 音量を調整する
+    /// 現在選択されているスライダーの音量を調整し、設定を保存する。
     /// </summary>
-    /// <param name="adjustment">音量調整の変更量（正: 増加、負: 減少）</param>
+    /// <param name="adjustment">音量の増減値（正: 増加, 負: 減少）</param>
     private void AdjustVolume(float adjustment)
     {
+        // Aボタン UI が選択されている場合は音量調整を行わない
+        if (currentIndex >= sliders.Count) return;
+
         // 現在選択されているスライダーを取得
         Slider selectedSlider = sliders[currentIndex];
 
-        // スティックのx軸の入力強度を取得
+        // スティックの入力強度を取得し、音量変更速度を調整
         float inputStrength = Mathf.Abs(Gamepad.current.leftStick.x.ReadValue());
-
-        // 入力強度に応じて音量調整速度を変化させる
         float speedMultiplier = Mathf.Lerp(1f, VolumeAdjustMultiplierMax, inputStrength);
 
-        // 音量を調整し、スライダーの範囲内に収める
+        // スライダーの値を変更（範囲を超えないように Clamp）
         selectedSlider.value = Mathf.Clamp(selectedSlider.value + adjustment * speedMultiplier, selectedSlider.minValue, selectedSlider.maxValue);
 
-        // 現在のスライダーに対応したオーディオミキサーのパラメータを設定
-        audioMixer.SetFloat(currentIndex == 0 ? AudioParameterName.BGM : AudioParameterName.SE, selectedSlider.value);
+        // オーディオミキサーに適用するパラメータ名を判定
+        string parameterName = currentIndex == 0 ? AudioParameterName.BGM : AudioParameterName.SE;
+
+        // オーディオミキサーに新しい音量を適用
+        audioMixer.SetFloat(parameterName, selectedSlider.value);
+
+        // 設定を PlayerPrefs に保存
+        PlayerPrefs.SetFloat(parameterName, selectedSlider.value);
+        PlayerPrefs.Save();
     }
+
 
     /// <summary>
     /// 入力受付をクールダウンする
@@ -228,32 +300,25 @@ public class SettingManager : MonoBehaviour
     }
 
     /// <summary>
-    /// バックボタンが押されたときの処理
+    /// Bボタンが押されたときの処理
     /// </summary>
-    /// <param name="value">バックボタンの入力値</param>
-    public void OnBack(InputValue value)
+    /// <param name="value">Bボタンの入力値</param>
+    private void OnBack(InputValue value)
     {
-        Debug.Log("OnBack Called! Scene: " + SceneManager.GetActiveScene().name);
-
-        if (value == null)
-        {
-            Debug.LogError("OnBack: InputValue is NULL!");
-        }
-        else
-        {
-            Debug.Log("OnBack: Value is " + value.isPressed);
-        }
+        Close();
     }
 
     /// <summary>
-    /// 設定メニューを閉じる
+    /// タイトルシーンに戻る
     /// </summary>
     public void Quit()
     {
         SceneManager.LoadScene("TitleScene");
     }
 
-    // 音声パラメータ名を定義するクラス
+    /// <summary>
+    /// 音声パラメータ名を定義するクラス
+    /// </summary>
     private static class AudioParameterName
     {
         public const string BGM = "BGM"; // BGMのパラメータ名

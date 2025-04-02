@@ -10,6 +10,8 @@ using UnityEngine.InputSystem;
 public class ExplanationManager : MonoBehaviour
 {
     [SerializeField] private SettingManager settingManager; // SettingManagerへの参照
+
+    // UI関連
     [SerializeField] private GameObject[] keyboardUIs; // キーボード用UI
     [SerializeField] private GameObject[] gamepadUIs;  // コントローラー用UI
     [SerializeField] private Image leftCursor; // 左カーソル
@@ -19,25 +21,29 @@ public class ExplanationManager : MonoBehaviour
     [SerializeField] private Image closeButtonUI; // クローズボタン
     [SerializeField] private Image closeYUI; // コントローラーのYボタン
 
-    private GameObject[] activeUIs; // 現在表示されているUI
-    private int currentIndex = 0; // 現在選択されているUIのインデックス
-    private bool isPaused = true; // ゲームがポーズ中かどうか
-
+    // 入力管理
     [SerializeField] private PlayerInput playerInput; // プレイヤー操作用のPlayerInput
     [SerializeField] private PlayerInput uiInput; // UI用のPlayerInput
 
-    private const int FIRST_UI_INDEX = 0; // 最初のUIのインデックス
-    private const int LAST_UI_INDEX_OFFSET = 1; // 最後のUIのインデックス計算のためのオフセット
-
+    // 内部管理用
+    private GameObject[] activeUIs; // 現在表示されているUI
+    private int currentIndex = 0; // 現在選択されているUIのインデックス
+    private bool isPaused = true; // ゲームがポーズ中かどうか
     private float lastInputTime = 0f; // 最後に入力を受け付けた時間
     private float inputDelay = 0.5f; // 連続入力を防ぐための遅延時間
-    private const float KEYBOARD_INPUT_DELAY = 10.0f;// キーボード用：連続入力を防ぐための遅延時間
-    private const float GAMEPAD_INPUT_DELAY = 0.5f;// ゲームパッド用：連続入力を防ぐための遅延時間
-
 
     // 他のスクリプトからカーソルの表示状態を取得するためのプロパティ
     public bool IsLeftCursorVisible => leftCursor.enabled;
     public bool IsRightCursorVisible => rightCursor.enabled;
+
+    // 定数
+    private const int FIRST_UI_INDEX = 0; // 最初のUIのインデックス
+    private const int LAST_UI_INDEX_OFFSET = 1; // 最後のUIのインデックス計算のためのオフセット
+    private const float KEYBOARD_INPUT_DELAY = 10.0f; // キーボード用：連続入力を防ぐための遅延時間
+    private const float GAMEPAD_INPUT_DELAY = 0.5f; // ゲームパッド用：連続入力を防ぐための遅延時間
+    private const float TimeScalePaused = 0f; // ポーズ中の時間スケール
+    private const float TimeScalePlaying = 1f; // 通常時の時間スケール
+
 
     // Startメソッドはシーン開始時に呼ばれる
     private void Start()
@@ -61,7 +67,7 @@ public class ExplanationManager : MonoBehaviour
         buttonBUI.gameObject.SetActive(isUsingGamepad);
 
         // ゲームをポーズ状態にする
-        Time.timeScale = 0;
+        Time.timeScale = TimeScalePaused;
 
         // UIの初期状態を更新
         StartCoroutine(DelayedUpdateUI());
@@ -89,7 +95,7 @@ public class ExplanationManager : MonoBehaviour
         if (currentIndex == -1)
         {
             // ポーズ解除時の処理
-            Time.timeScale = 1; // ゲームを再開
+            Time.timeScale = TimeScalePlaying; // ゲームを再開
             isPaused = false; // ポーズを解除
             closeButtonUI.enabled = false; // クローズボタン非表示
             closeYUI.enabled = false; // コントローラーのYボタン非表示
@@ -102,7 +108,7 @@ public class ExplanationManager : MonoBehaviour
         else
         {
             // ポーズ中の処理
-            Time.timeScale = 0; // ゲームを停止
+            Time.timeScale = TimeScalePaused; // ゲームを停止
             isPaused = true; // ポーズ状態
             uiInput.enabled = true; // UI用入力有効
             playerInput.enabled = false; // プレイヤー操作用入力無効
