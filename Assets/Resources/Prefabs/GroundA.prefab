@@ -177,7 +177,7 @@ GameObject:
   - component: {fileID: 5724901646570842757}
   - component: {fileID: 2536992295398894724}
   m_Layer: 0
-  m_Name: Level (1)
+  m_Name: GroundA
   m_TagString: Level
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
