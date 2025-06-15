@@ -1,0 +1,9 @@
+[
+{
+    "forwardSpeed": "5",
+    "moveSpeed": "5",
+    "jumpForce": "7",
+    "groundCheckRadius": "0.1",
+    "jumpAnimationDuration": "0.8"
+}
+]

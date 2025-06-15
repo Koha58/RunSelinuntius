@@ -3487,11 +3487,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90f9de00bcb991f43888488d70c0c1c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stageFileName: stage01
-  initialZPos: 392
-  levelSpacing: 98
-  baseGenerationDelay: 100
-  playerMove: {fileID: 802400565}
 --- !u!4 &1556051481
 Transform:
   m_ObjectHideFlags: 0
