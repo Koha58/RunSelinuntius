@@ -35,4 +35,17 @@ public class PlayerMoveSettingsExport
         groundCheckRadius = data.groundCheckRadius.ToString("0.###");
         jumpAnimationDuration = data.jumpAnimationDuration.ToString("0.###");
     }
+
+    public PlayerMoveSettings ToSettings()
+    {
+        return new PlayerMoveSettings
+        {
+            forwardSpeed = float.Parse(forwardSpeed),
+            moveSpeed = float.Parse(moveSpeed),
+            jumpForce = float.Parse(jumpForce),
+            groundCheckRadius = float.Parse(groundCheckRadius),
+            jumpAnimationDuration = float.Parse(jumpAnimationDuration),
+        };
+    }
+
 }
