@@ -3739,6 +3739,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1730752352}
   - component: {fileID: 1730752351}
+  - component: {fileID: 1730752353}
   m_Layer: 0
   m_Name: AttackGenerate
   m_TagString: Untagged
@@ -3758,28 +3759,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ac885c7a18894644a46a210913b54b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefabsToSpawn:
-  - {fileID: 4453908617162543016, guid: 36b941aa3cfbf554580714ac937cd85b, type: 3}
-  - {fileID: 862592986140479894, guid: ef68d3a7e5b8fce40969bc64e3eed74a, type: 3}
-  - {fileID: 3884837602681658032, guid: 4e2fedf3e547f3642800504bd1c2dd46, type: 3}
+  spawnSettingsJson: {fileID: 4900000, guid: 0f1a1e353043c6740b7a4d6ad888ff68, type: 3}
   player: {fileID: 802400554}
-  baseSpawnInterval: 2
-  maxSpawnMultiplier: 1
-  minSpawnMultiplier: 0.5
-  distanceFromPlayer: 15
-  minXOffset: -7
-  maxXOffset: 8
-  spawnYOffset: 0.7
-  specialYOffset:
-  - 0.1
-  - 0.1
-  - 5
-  specialZOffset:
-  - 45
-  - 100
-  - 20
-  destroyDelay: 10
   playerStatus: {fileID: 802400563}
+  playerMove: {fileID: 802400565}
 --- !u!4 &1730752352
 Transform:
   m_ObjectHideFlags: 0
@@ -3795,6 +3778,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1730752353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1730752350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c9cc4e72e46b1c408577d44e44972eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1756429306
 GameObject:
   m_ObjectHideFlags: 0

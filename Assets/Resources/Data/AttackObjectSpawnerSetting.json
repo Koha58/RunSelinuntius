@@ -1,0 +1,44 @@
+[
+  {
+    "name": "ArrowAttack",
+    "prefabPath": "Prefabs/Attack/Arrow/ArrowAttack",
+    "yOffset": 0.1,
+    "zOffset": 45.0,
+    "baseSpawnInterval": 2.0,
+    "maxSpawnMultiplier": 1.5,
+    "minSpawnMultiplier": 0.3,
+    "distanceFromPlayer": 20.0,
+    "minXOffset": -6.0,
+    "maxXOffset": 8.0,
+    "spawnYOffset": 0.7,
+    "destroyDelay": 10.0
+  },
+  {
+    "name": "Barrel",
+    "prefabPath": "Prefabs/Attack/Barrel/Barrel",
+    "yOffset": 0.1,
+    "zOffset": 80.0,
+    "baseSpawnInterval": 2.0,
+    "maxSpawnMultiplier": 1.5,
+    "minSpawnMultiplier": 0.3,
+    "distanceFromPlayer": 20.0,
+    "minXOffset": -6.0,
+    "maxXOffset": 8.0,
+    "spawnYOffset": 0.7,
+    "destroyDelay": 10.0
+  },
+  {
+    "name": "IronBall",
+    "prefabPath": "Prefabs/Attack/Cannon/IronBall",
+    "yOffset": 5.0,
+    "zOffset": 20.0,
+    "baseSpawnInterval": 2.0,
+    "maxSpawnMultiplier": 1.5,
+    "minSpawnMultiplier": 0.3,
+    "distanceFromPlayer": 20.0,
+    "minXOffset": -6.0,
+    "maxXOffset": 8.0,
+    "spawnYOffset": 0.7,
+    "destroyDelay": 10.0
+  }
+]

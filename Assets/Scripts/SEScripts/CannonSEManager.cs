@@ -47,8 +47,8 @@ public class CannonSEManager : MonoBehaviour
             // 音が終わったら削除
             Destroy(soundObject, cannonImpactSound.length);
 
-            // 弾自体を削除
-            Destroy(gameObject, cannonImpactSound.length);
+            // 弾自体をプールに戻す処理を少し遅らせる
+            StartCoroutine(ReturnToPoolAfterDelay("Prefabs/Attack/Cannon/IronBall", this.gameObject, 1.5f));
         }
     }
 
@@ -71,4 +71,19 @@ public class CannonSEManager : MonoBehaviour
             return null;
         }
     }
+
+    /// <summary>
+    /// 指定秒数後に障害物をプールに返却する
+    /// </summary>
+    private IEnumerator ReturnToPoolAfterDelay(string prefabPath, GameObject obj, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // Nullチェックと返却
+        if (ObstaclePoolManager.Instance != null && obj != null)
+        {
+            ObstaclePoolManager.Instance.ReturnObject(prefabPath, obj);
+        }
+    }
+
 }

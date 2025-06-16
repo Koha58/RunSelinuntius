@@ -1,66 +1,94 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Newtonsoft.Json;
 
 /// <summary>
-/// �G�̍U���p�I�u�W�F�N�g(��Q��)�����N���X
+/// JSONで定義された設定に基づいて攻撃オブジェクト（障害物）を生成するクラス。
+/// プレイヤーのHPに応じて生成間隔を変化させ、難易度を調整する。
 /// </summary>
 public class AttackObjectSpawner : MonoBehaviour
 {
-    [Header("Prefab�ݒ�")]
-    [SerializeField] private GameObject[] prefabsToSpawn; // ��������Prefab�̔z��
-    [SerializeField] private GameObject player; // �v���C���[�I�u�W�F�N�g
+    [Header("設定ファイル")]
+    [SerializeField] private TextAsset spawnSettingsJson; // 障害物生成設定が記載されたJSONファイル
+    [SerializeField] private GameObject player;           // プレイヤーのGameObject（位置参照用）
+    [SerializeField] private PlayerStatus playerStatus;   // プレイヤーのHP情報
+    [SerializeField] private PlayerMove playerMove;       // プレイヤーの移動速度情報（Z軸速度参照）
 
-    [Header("�����Ԋu�ݒ�")]
-    [SerializeField] private float baseSpawnInterval = 2.0f; // ��{�̃I�u�W�F�N�g�����Ԋu�i�b�j
-    [SerializeField] private float maxSpawnMultiplier = 1.0f; // HP�ő厞�̐����Ԋu�{��
-    [SerializeField] private float minSpawnMultiplier = 0.5f; // HP�ŏ����̐����Ԋu�{��
+    private float timer = 0.0f; // 時間計測用タイマー（生成タイミング制御）
 
-    [Header("�����ʒu�ݒ�")]
-    [SerializeField] private float distanceFromPlayer = 20.0f; // Prefab�̃f�t�H���gZ���W�I�t�Z�b�g
-    [SerializeField] private float minXOffset = -7.0f; // �����ʒu�����X���W�ŏ��I�t�Z�b�g
-    [SerializeField] private float maxXOffset = 8.0f; // �����ʒu�����X���W�ő�I�t�Z�b�g
-    [SerializeField] private float spawnYOffset = 0.7f; // Prefab�������̃f�t�H���gY���I�t�Z�b�g
+    // prefabPath（Resources内パス）と対応するPrefabをキャッシュ
+    private Dictionary<string, GameObject> prefabCache = new();
 
-    [Header("Prefab�̐����ʒu�ݒ�")]
-    [SerializeField] private float[] specialYOffset = new float[] { 0.1f, 0.1f, 5.0f }; // y���̒l��ݒ�{ ArrowAttack, Barrel, IronBall}
-    [SerializeField] private float[] specialZOffset = new float[] { 45.0f, 100.0f, 20.0f }; // z���̒l��ݒ�{ ArrowAttack, Barrel, IronBall}
+    // JSONから読み込んだ、各障害物の生成設定情報のリスト
+    private List<PrefabSpawnSetting> spawnSettings;
 
-    [Header("���ʉ��E�폜�ݒ�")]
-    [SerializeField] private float destroyDelay = 10.0f; // �I�u�W�F�N�g���폜����܂ł̒x�����ԁi�b�j
+    // ゲーム開始時点のプレイヤーX位置（ランダムX生成の基準）
+    private Vector3 playerInitialPosition;
 
-    [Header("�v���C���[���")]
-    [SerializeField] private PlayerStatus playerStatus; // �v���C���[��HP���
-
-    private Vector3 playerInitialPosition; // �v���C���[�̏����ʒu
-    private float timer = 0.0f; // �I�u�W�F�N�g�����Ԋu���v������^�C�}�[
-
+    /// <summary>
+    /// 初期化処理。JSONの読み込みとPrefabのキャッシュ、プールの初期化を行う。
+    /// </summary>
     void Start()
     {
-        if (player != null)
+        // プレイヤーやステータスが設定されていない場合はエラー
+        if (player == null || playerStatus == null)
         {
-            playerInitialPosition = player.transform.position;
+            Debug.LogError("プレイヤーまたはステータスが設定されていません！");
+            return;
         }
-        else
+
+        // JSONファイルが未指定の場合はエラー
+        if (spawnSettingsJson == null)
         {
-            Debug.LogError("Player object is not assigned!");
+            Debug.LogError("JSON設定ファイルが指定されていません！");
+            return;
         }
+
+        // JSON文字列からPrefabSpawnSettingのリストにデシリアライズ
+        spawnSettings = JsonConvert.DeserializeObject<List<PrefabSpawnSetting>>(spawnSettingsJson.text);
+
+        // 設定された各PrefabをResourcesから読み込み、キャッシュ＆プール初期化
+        foreach (var setting in spawnSettings)
+        {
+            GameObject prefab = Resources.Load<GameObject>(setting.prefabPath); // パスからPrefab取得
+            if (prefab != null)
+            {
+                prefabCache[setting.prefabPath] = prefab; // キャッシュに保存
+                ObstaclePoolManager.Instance.InitializePool(setting.prefabPath, prefab, 5); // プールに5個登録
+            }
+            else
+            {
+                // 指定パスにPrefabが存在しない場合は警告
+                Debug.LogWarning($"Prefab 読み込み失敗: {setting.prefabPath}");
+            }
+        }
+
+        // プレイヤー初期位置を保存（X方向のランダム生成に利用）
+        playerInitialPosition = player.transform.position;
     }
 
+    /// <summary>
+    /// フレーム毎の更新処理。タイマーによる障害物の定期生成を管理。
+    /// </summary>
     void Update()
     {
-        timer += Time.deltaTime; // �o�ߎ��Ԃ����Z
+        // 設定が読み込まれていない場合は処理しない
+        if (spawnSettings == null || spawnSettings.Count == 0) return;
 
-        // HP�Ɋ�Â��ē��I�ɐ����Ԋu���v�Z
+        // 経過時間を加算
+        timer += Time.deltaTime;
+
+        // プレイヤーの現在のHP割合を計算（0.0〜1.0）
         float hpRatio = playerStatus.CurrentHP / (float)playerStatus.MaxHP;
 
-        // HP�̊����ɉ����Đ����Ԋu����
+        // HPが減るほど生成間隔が短くなるように補間（Lerpで直線的に変化）
         float spawnInterval = Mathf.Lerp(
-            baseSpawnInterval * maxSpawnMultiplier,
-            baseSpawnInterval * minSpawnMultiplier,
-            hpRatio
-        );
+            spawnSettings[0].baseSpawnInterval * spawnSettings[0].minSpawnMultiplier, // 最短間隔
+            spawnSettings[0].baseSpawnInterval * spawnSettings[0].maxSpawnMultiplier, // 最長間隔
+            1f - hpRatio); // HPが低いほど 1 に近づき、最短間隔に近づく
 
+        // タイマーが生成間隔を超えたら、障害物を生成
         if (timer >= spawnInterval)
         {
             SpawnRandomObject();
@@ -69,56 +97,72 @@ public class AttackObjectSpawner : MonoBehaviour
     }
 
     /// <summary>
-    /// �����_����Prefab�𐶐����A�v���C���[�̑O���ɔz�u����
+    /// ランダムに選ばれた設定に基づいてPrefabを生成し、位置を調整して配置する。
     /// </summary>
     void SpawnRandomObject()
     {
-        if (prefabsToSpawn.Length == 0 || player == null)
+        // 設定リストからランダムに1つ選択
+        var setting = spawnSettings[Random.Range(0, spawnSettings.Count)];
+
+        // 該当Prefabをキャッシュから取得
+        GameObject prefab = prefabCache[setting.prefabPath];
+
+        if (prefab == null)
         {
-            Debug.LogError("Prefab�܂��̓v���C���[���ݒ肳��Ă��܂���I");
+            Debug.LogWarning($"Prefabが見つかりません: {setting.prefabPath}");
             return;
         }
 
-        // �z�񂩂烉���_����Prefab��I��
-        int randomIndex = Random.Range(0, prefabsToSpawn.Length);
-        GameObject selectedPrefab = prefabsToSpawn[randomIndex];
+        // 生成位置計算：
+        // 自由落下の時間を計算（√(2h/g)）
+        float fallTime = Mathf.Sqrt((2f * setting.yOffset) / Physics.gravity.magnitude);
 
-        // �v���C���[�����ʒu����Ƀ����_����X���W���v�Z
-        float randomX = Random.Range(playerInitialPosition.x + minXOffset, playerInitialPosition.x + maxXOffset);
-        float spawnY = spawnYOffset;
-        float spawnZ = player.transform.position.z + distanceFromPlayer;
+        // 落下中にプレイヤーが進むZ距離を加味した前方位置（zOffsetも加算）
+        float forwardZ = setting.zOffset + playerMove.ForwardSpeed * fallTime;
 
-        // Prefab���̃I�t�Z�b�g��K�p
-        if (randomIndex < specialYOffset.Length)
-        {
-            spawnY = specialYOffset[randomIndex];
-        }
-        if (randomIndex < specialZOffset.Length)
-        {
-            spawnZ = player.transform.position.z + specialZOffset[randomIndex];
-        }
+        // 現在のプレイヤー位置にforwardZを加算して生成Z位置を決定
+        float spawnZ = player.transform.position.z + forwardZ;
 
-        // �����ʒu������
-        Vector3 spawnPosition = new Vector3(randomX, spawnY, spawnZ);
+        // プレイヤー初期X位置を基準に、X範囲（min～max）内でランダム生成
+        float spawnX = Random.Range(
+            playerInitialPosition.x + setting.minXOffset,
+            playerInitialPosition.x + setting.maxXOffset
+        );
 
-        // Prefab�𐶐�
-        GameObject obj = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
+        // 最終的な生成位置を決定（Yは設定された上空の高さ）
+        Vector3 spawnPos = new Vector3(spawnX, setting.yOffset, spawnZ);
 
-        // �w�肵�����Ԍ�ɃI�u�W�F�N�g���폜
-        StartCoroutine(DestroyObjectAfterDelay(obj, destroyDelay));
+        // プールから障害物オブジェクトを取得し、位置設定
+        GameObject obj = ObstaclePoolManager.Instance.GetObject(setting.prefabPath, prefab);
+        obj.transform.position = spawnPos;
+
+        // 一定時間後にプールに返却するコルーチン開始
+        StartCoroutine(ReturnToPoolAfterDelay(setting.prefabPath, obj, setting.destroyDelay));
     }
 
     /// <summary>
-    /// �w�莞�Ԍ�ɃI�u�W�F�N�g���폜����R���[�`���B
+    /// 指定秒数後にオブジェクトをプールに返却する（再利用のため）
     /// </summary>
-    /// <param name="obj">�폜�Ώۂ̃Q�[���I�u�W�F�N�g</param>
-    /// <param name="delay">�폜�܂ł̒x�����ԁi�b�j</param>
-    private IEnumerator DestroyObjectAfterDelay(GameObject obj, float delay)
+    /// <param name="prefabPath">返却対象のPrefabを識別するパス（プール管理に使用）</param>
+    /// <param name="obj">返却する対象のゲームオブジェクト（障害物）</param>
+    /// <param name="delay">返却までの待機時間（秒）</param>
+    IEnumerator ReturnToPoolAfterDelay(string prefabPath, GameObject obj, float delay)
     {
+        // 指定時間待機
         yield return new WaitForSeconds(delay);
-        if (obj != null)
+
+        // オブジェクトがすでに破棄されていないかチェック
+        if (obj == null)
         {
-            Destroy(obj);
+            Debug.LogWarning($"ReturnToPoolAfterDelay: obj is already destroyed or null. prefabPath={prefabPath}");
+            yield break;
         }
+
+        // デバッグ用ログ出力（返却通知）
+        Debug.Log($"ReturnToPoolAfterDelay: returning object {obj.name}");
+
+        // プールに返却（非アクティブ化など）
+        ObstaclePoolManager.Instance.ReturnObject(prefabPath, obj);
     }
+
 }

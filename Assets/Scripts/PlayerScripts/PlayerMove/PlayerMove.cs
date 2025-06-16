@@ -72,6 +72,9 @@ public class PlayerMove : MonoBehaviour
 
     #endregion
 
+    // 外部から安全に参照できるようにするプロパティ
+    public float ForwardSpeed => forwardSpeed;
+
     /// <summary>
     /// コンポーネントの初期化
     /// </summary>
