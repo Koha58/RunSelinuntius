@@ -1,9 +1,14 @@
 [
-{
-    "forwardSpeed": "5",
-    "moveSpeed": "5",
-    "jumpForce": "7",
-    "groundCheckRadius": "0.1",
-    "jumpAnimationDuration": "0.8"
-}
+  {
+    "forwardSpeed": 5.0,
+    "moveSpeed": 5.0,
+    "jumpForce": 7.0,
+    "groundCheckRadius": 0.1,
+    "jumpAnimationDuration": 0.8,
+    "targetSpeedMultiplier": 5.0,
+    "minSpeedMultiplier": 0.5,
+    "speedMultiplierLerpFactor": 0.1,
+    "slowMotionSpeedMultiplier": 0.1,
+    "defaultFixedDeltaTime": 0.0167
+  }
 ]

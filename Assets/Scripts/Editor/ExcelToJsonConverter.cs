@@ -5,6 +5,7 @@ using System.IO;
 using ExcelDataReader;
 using UnityEditor;
 using UnityEngine;
+using Newtonsoft.Json;
 
 /// <summary>
 /// ExcelデータをJSONに変換するUnityエディタ拡張ツール
@@ -85,58 +86,54 @@ public class ExcelToJsonConverter : EditorWindow
     /// </summary>
     private void ConvertExcelToJson(string path)
     {
-        // ファイルをバイナリで開く
+        // Excelファイルを開く
         using (var stream = File.Open(path, FileMode.Open, FileAccess.Read))
         {
-            // 日本語やShift-JIS系のエンコーディングに対応
+            // 文字コードプロバイダの登録（Shift-JISなどに対応するため）
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-            // Excelのリーダーを作成
+            // Excelファイルを読み込むリーダーを作成
             using (var reader = ExcelReaderFactory.CreateReader(stream))
             {
-                // シート全体をDataSetとして読み込む（複数シート対応）
+                // DataSetとして全シートを取得
                 var result = reader.AsDataSet();
 
                 // 最初のシートを取得
                 var table = result.Tables[0];
 
-                // 1行目はヘッダーなので、最低2行必要（データがない場合はスキップ）
+                // 行が2行未満の場合（ヘッダーのみ or 空）は処理しない
                 if (table.Rows.Count < 2) return;
 
-                // エクスポート用リストを作成（PlayerMoveSettingsExport型）
-
-                // 2行目以降の各行をデータとして処理
-                List<PlayerMoveSettingsExport> exportList = new List<PlayerMoveSettingsExport>();
-
-                for (int row = 1; row < table.Rows.Count; row++)
+                // 1行目からヘッダー（列名）を取得
+                var columnNames = new List<string>();
+                for (int col = 0; col < table.Columns.Count; col++)
                 {
-                    PlayerMoveSettings data = new PlayerMoveSettings()
-                    {
-                        forwardSpeed = Convert.ToSingle(table.Rows[row][0]),
-                        moveSpeed = Convert.ToSingle(table.Rows[row][1]),
-                        jumpForce = Convert.ToSingle(table.Rows[row][2]),
-                        groundCheckRadius = Convert.ToSingle(table.Rows[row][3]),
-                        jumpAnimationDuration = Convert.ToSingle(table.Rows[row][4]),
-                    };
-
-                    exportList.Add(new PlayerMoveSettingsExport(data));
+                    columnNames.Add(table.Rows[0][col]?.ToString() ?? $"Column{col}");
                 }
 
+                // データ行を辞書のリストとして構築
+                var exportList = new List<Dictionary<string, object>>();
+                for (int row = 1; row < table.Rows.Count; row++)
+                {
+                    var rowData = new Dictionary<string, object>();
+                    for (int col = 0; col < table.Columns.Count; col++)
+                    {
+                        rowData[columnNames[col]] = table.Rows[row][col];
+                    }
+                    exportList.Add(rowData);
+                }
 
-                // JSON文字列に変換（配列形式・整形付き）
-                string json = JsonHelper.ToJson(exportList.ToArray(), true);
-
-                // ファイル名をExcelファイル名から取得
-                string fileName = Path.GetFileNameWithoutExtension(path);
-
-                // JSON出力パスを構築
-                string jsonPath = Path.Combine(outputPath, fileName + ".json");
+                // 辞書のリストをJSON文字列に変換（整形付き）
+                string json = JsonConvert.SerializeObject(exportList, Formatting.Indented);
 
                 // JSONファイルとして保存
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                string jsonPath = Path.Combine(outputPath, fileName + ".json");
                 File.WriteAllText(jsonPath, json);
 
                 Debug.Log($"変換成功: {fileName}.json");
             }
         }
     }
+
 }

@@ -1,4 +1,5 @@
 using System.Collections;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -8,61 +9,134 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class PlayerMove : MonoBehaviour
 {
-    // 定数の宣言
-    private const float DefaultForwardSpeed = 5f;  // 前方向移動速度
-    private const float DefaultMoveSpeed = 5f;     // 横移動速度
-    private const float DefaultJumpForce = 7f;     // ジャンプ力
-    private const float DefaultGroundCheckRadius = 0.1f; // 地面チェックの半径
-    private const float DefaultJumpAnimationDuration = 0.8f; // ジャンプアニメーション終了までの遅延時間
-    private const float DefaultNormalTimeScale = 1f; // 通常時の速度倍率
-    private const float DefaultFixedDeltaTime = 0.0167f; // デフォルトの FixedDeltaTime
-    private const float TargetSpeedMultiplier = 5f; // Targetの速度を変更する倍率
-    private const float MinFixedDeltaTime = 0.002f; // 最低固定フレームレート
-    private const float MinSpeedMultiplier = 0.5f; // 最終的なプレイヤーの速度倍率
-    private const float SpeedMultiplierLerpFactor = 0.1f; // スムージング係数
-    private const float ZeroSpeedMultiplier = 0f; // 速度倍率をゼロにする値
-    private const float DefaultHorizontalVelocity = 0f; // 横方向の初期速度（0）
+    #region 定数（ゲーム進行・時間制御・移動）
 
-    private const string GameClearSceneName = "GameClearScene";  // ゲームクリアシーンの名前
-    private const float ZeroTimeScale = 0f; // ゲームを完全に停止する時の TimeScale
-    private const float SlowMotionSpeedMultiplier = 0.1f; // スローモーション時の倍率
+    private const float DefaultNormalTimeScale = 1f;     // 通常時の速度倍率
+    private const float ZeroTimeScale = 0f;              // ゲームを完全に停止する時の TimeScale
+    private const float MinFixedDeltaTime = 0.002f;      // 最低固定フレームレート
+    private const float ZeroSpeedMultiplier = 0f;        // 速度倍率をゼロにする値
+    private const float DefaultHorizontalVelocity = 0f;  // 横方向の初期速度（0）
+
+    private const string GameClearSceneName = "GameClearScene"; // ゲームクリアシーンの名前
+    private const int TargetFPS = 60;                   // フレームレートの目標値
+    private const int VSyncDisabled = 0;                // VSync を無効にする値
+
+    #endregion
+
+    #region SerializeField（インスペクター設定）
 
     [Header("移動設定")]
     [SerializeField] private Animator animator;        // プレイヤーのアニメーター
-    [SerializeField] private float forwardSpeed = DefaultForwardSpeed;  // 前方向移動速度
-    [SerializeField] private float moveSpeed = DefaultMoveSpeed;     // 横移動速度
-    [SerializeField] private float jumpForce = DefaultJumpForce;     // ジャンプ力
-    [SerializeField] private LayerMask groundLayer;    // 地面のレイヤー
 
     [Header("地面判定設定")]
-    [SerializeField] private float groundCheckRadius = DefaultGroundCheckRadius; // 地面チェックの半径
-
-    [Header("アニメーション設定")]
-    [SerializeField] private float jumpAnimationDuration = DefaultJumpAnimationDuration; // ジャンプアニメーション終了までの遅延時間
+    [SerializeField] private LayerMask groundLayer;    // 地面のレイヤー
+    [SerializeField] private float groundCheckRadius;  // 地面チェックの半径
 
     [Header("FinalAttackSE設定")]
     [SerializeField] private FinalAttackSEControl seControl; // FinalAttack の SE 制御
 
-    private float speedMultiplier = 1f;               // 速度倍率
-    private float horizontalVelocity;                 // 横方向の移動速度
-    private Rigidbody playerRigidbody;               // プレイヤーのRigidbody
-    private bool isGrounded;                          // 地面にいるかどうか
+    #endregion
 
-    private bool isNearTarget = false; // FinalAttack可能範囲内にいるか
-    private bool isFinalAttackSEPlayed = false; // FinalAttackのSEが再生されたかどうかを管理
+    #region JSONから読み込む設定
 
-    private const int TargetFPS = 60;  // フレームレートの目標値
-    private const int VSyncDisabled = 0; // VSync を無効にする値
+    private float forwardSpeed;             // 前方向移動速度
+    private float moveSpeed;                // 横移動速度
+    private float jumpForce;                // ジャンプ力
+    private float jumpAnimationDuration;    // ジャンプアニメーションの遅延時間
 
-    private GameObject[] targets;　// Targetオブジェクトの配列。ゲーム内でターゲットとなるオブジェクトを格納
-    private bool setSlowMotion;　  // スローモーションの設定を保持するフラグ。スローモーションが有効かどうかを制御
-    private bool isFinalAttackTriggered = false; // FinalAttackが発生したかどうか
+    private float defaultFixedDeltaTime = 0.0167f;     // デフォルトの FixedDeltaTime
+    private float targetSpeedMultiplier;               // Targetの速度を変更する倍率
+    private float minSpeedMultiplier;                  // 最終的なプレイヤーの速度倍率
+    private float speedMultiplierLerpFactor = 0.1f;    // スムージング係数
+    private float slowMotionSpeedMultiplier = 0.1f;    // スローモーション時の倍率
+
+    #endregion
+
+    #region プレイヤー状態
+
+    private float speedMultiplier = 1f;         // 現在の速度倍率
+    private float horizontalVelocity;           // 横方向の移動速度
+    private Rigidbody playerRigidbody;          // プレイヤーのRigidbody
+    private bool isGrounded;                    // 地面にいるかどうか
+
+    private bool isNearTarget = false;          // FinalAttack可能範囲内にいるか
+    private bool isFinalAttackSEPlayed = false; // FinalAttackのSEが再生されたか
+    private bool isFinalAttackTriggered = false; // FinalAttackが発生したか
+    private bool setSlowMotion;                 // スローモーションの設定
+
+    #endregion
+
+    #region ゲームオブジェクト参照
+
+    private GameObject[] targets; // ゲーム内ターゲットオブジェクトの配列
+
+    #endregion
 
     /// <summary>
     /// コンポーネントの初期化
     /// </summary>
     private void Awake()
     {
+        // Resources/Data/PlayerMoveSettings.json を読み込む（拡張子不要）
+        TextAsset jsonFile = Resources.Load<TextAsset>("Data/PlayerMoveSettings");
+
+        if (jsonFile != null)
+        {
+            // JSONファイルのテキストを取得
+            string json = jsonFile.text;
+
+            // JSONを PlayerMoveSettingsExport[] 配列としてデシリアライズ（Newtonsoft.Json使用）
+            PlayerMoveSettingsExport[] exports = JsonConvert.DeserializeObject<PlayerMoveSettingsExport[]>(json);
+
+            // 配列が null でなく、1つ以上の要素があれば反映
+            if (exports != null && exports.Length > 0)
+            {
+                // 最初の設定データを使って PlayerMoveSettings に変換
+                PlayerMoveSettings settings = exports[0].ToSettings();
+
+                // PlayerMoveSettings の各設定値を、対応する変数に反映
+
+                // 前方移動速度
+                forwardSpeed = settings.forwardSpeed;
+
+                // 全体の移動速度
+                moveSpeed = settings.moveSpeed;
+
+                // ジャンプ力
+                jumpForce = settings.jumpForce;
+
+                // 地面判定の半径
+                groundCheckRadius = settings.groundCheckRadius;
+
+                // ジャンプアニメーションの時間
+                jumpAnimationDuration = settings.jumpAnimationDuration;
+
+                // 目標速度への倍率調整
+                targetSpeedMultiplier = settings.targetSpeedMultiplier;
+
+                // 最低速度倍率
+                minSpeedMultiplier = settings.minSpeedMultiplier;
+
+                // 速度倍率の補間係数
+                speedMultiplierLerpFactor = settings.speedMultiplierLerpFactor;
+
+                // スローモーション時の速度倍率
+                slowMotionSpeedMultiplier = settings.slowMotionSpeedMultiplier;
+
+                // 固定のデルタタイム（デフォルト値）
+                defaultFixedDeltaTime = settings.defaultFixedDeltaTime;
+            }
+            else
+            {
+                Debug.LogError("JSONのデシリアライズに失敗しました。");
+            }
+        }
+        else
+        {
+            // JSONファイルが見つからなかった場合のエラーログ
+            Debug.LogError("PlayerMoveSettings.json が Resources/Data に見つかりません。");
+        }
+
         // フレームレートとVSyncの設定
         QualitySettings.vSyncCount = VSyncDisabled;
         Application.targetFrameRate = TargetFPS;
@@ -254,7 +328,7 @@ public class PlayerMove : MonoBehaviour
                 TargetMove targetMove = target.GetComponent<TargetMove>();
                 if (targetMove != null)
                 {
-                    targetMove.SetSpeedMultiplier(TargetSpeedMultiplier);
+                    targetMove.SetSpeedMultiplier(targetSpeedMultiplier);
                 }
             }
         }
@@ -270,17 +344,17 @@ public class PlayerMove : MonoBehaviour
         if (isSlow)
         {
             // Time.timeScale を更に小さくして時間全体を遅くする
-            Time.timeScale = SlowMotionSpeedMultiplier; // ここで時間の流れを遅くする
-            Time.fixedDeltaTime = Mathf.Max(DefaultFixedDeltaTime * Time.timeScale, MinFixedDeltaTime); // 固定フレームレートの調整
+            Time.timeScale = slowMotionSpeedMultiplier; // ここで時間の流れを遅くする
+            Time.fixedDeltaTime = Mathf.Max(defaultFixedDeltaTime * Time.timeScale, MinFixedDeltaTime); // 固定フレームレートの調整
 
             // speedMultiplier をさらに低く設定して、プレイヤーの動きを遅くする
-            speedMultiplier = Mathf.Lerp(speedMultiplier, MinSpeedMultiplier, SpeedMultiplierLerpFactor); // より遅くなるように調整
+            speedMultiplier = Mathf.Lerp(speedMultiplier, minSpeedMultiplier, speedMultiplierLerpFactor); // より遅くなるように調整
         }
         else
         {
             // 通常速度に戻す
             Time.timeScale = DefaultNormalTimeScale;
-            Time.fixedDeltaTime = DefaultFixedDeltaTime;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
             speedMultiplier = DefaultNormalTimeScale;
         }
     }
